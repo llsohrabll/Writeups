@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none" role="img" aria-label="Data exposure">
+  <rect x="0.5" y="0.5" width="63" height="63" rx="15.5" fill="#FFF2D5" stroke="#F1DDAA"/>
+  <g stroke="#805711" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 33s6-10 16-10 16 10 16 10-6 10-16 10-16-10-16-10Z"/><circle cx="32" cy="33" r="5"/><path d="m22 18-2-3m12 3v-4m10 4 2-3"/></g>
+</svg>

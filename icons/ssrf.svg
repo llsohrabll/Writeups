@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none" role="img" aria-label="Server-side request forgery">
+  <rect x="0.5" y="0.5" width="63" height="63" rx="15.5" fill="#E2F5EF" stroke="#C4E9DF"/>
+  <g stroke="#096C61" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="17" y="17" width="30" height="11" rx="3"/><rect x="17" y="36" width="30" height="11" rx="3"/><path d="M23 22.5h.01M23 41.5h.01M32 28v8m-4-4 4 4 4-4"/></g>
+</svg>

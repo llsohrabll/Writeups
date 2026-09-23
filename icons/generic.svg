@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none" role="img" aria-label="Security finding">
+  <rect x="0.5" y="0.5" width="63" height="63" rx="15.5" fill="#EAF0FF" stroke="#D5E1FC"/>
+  <g stroke="#3156C8" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m32 15-14 6v11c0 8 5 14 14 18 9-4 14-10 14-18V21l-14-6Z"/><path d="M32 25v14m-7-7h14"/></g>
+</svg>
