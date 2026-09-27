@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="610" viewBox="0 0 1024 610" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Anonymous repository inventory</title>
+  <desc id="desc">Six local Artifactory repositories covering design systems, content clients, web engagement, partner projects, CLI tooling, and publishing or media components. Four virtual repositories were also listed. At least 83 package versions were identified across the local repositories.</desc>
+  <rect width="1024" height="610" rx="24" fill="#0B1425"/>
+  <rect x="1" y="1" width="1022" height="608" rx="23" stroke="#28405C" stroke-width="2"/>
+  <text x="42" y="53" fill="#F4F8FE" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700">What the repository list revealed</text>
+  <text x="42" y="83" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="16">Anonymous response: 10 repositories in total</text>
+  <rect x="802" y="35" width="180" height="55" rx="14" fill="#163D39" stroke="#62D5BD" stroke-width="1.5"/>
+  <text x="892" y="60" text-anchor="middle" fill="#9AF5E0" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="700">6 LOCAL</text>
+  <text x="892" y="79" text-anchor="middle" fill="#BBDDD9" font-family="Arial, Helvetica, sans-serif" font-size="12">artifact stores</text>
+
+  <text x="42" y="129" fill="#9CD8E6" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" letter-spacing="2">LOCAL REPOSITORIES</text>
+
+  <rect x="42" y="151" width="301" height="148" rx="17" fill="#13233A" stroke="#3B607B" stroke-width="1.5"/>
+  <rect x="42" y="151" width="7" height="148" rx="3.5" fill="#62D5BD"/>
+  <text x="65" y="186" fill="#F4F8FE" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700">Design system</text>
+  <text x="65" y="221" fill="#62D5BD" font-family="Arial, Helvetica, sans-serif" font-size="32" font-weight="700">36</text>
+  <text x="118" y="220" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="15">packages observed</text>
+  <text x="65" y="263" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="14">8 scoped namespaces</text>
+  <text x="65" y="283" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="14">13 names in one namespace</text>
+
+  <rect x="361" y="151" width="301" height="148" rx="17" fill="#13233A" stroke="#3B607B" stroke-width="1.5"/>
+  <rect x="361" y="151" width="7" height="148" rx="3.5" fill="#DABEFF"/>
+  <text x="384" y="186" fill="#F4F8FE" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700">Content &amp; API clients</text>
+  <text x="384" y="221" fill="#DABEFF" font-family="Arial, Helvetica, sans-serif" font-size="32" font-weight="700">9</text>
+  <text x="418" y="220" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="15">packages observed</text>
+  <text x="384" y="263" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="14">Content and GraphQL SDKs</text>
+  <text x="384" y="283" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="14">plus a schema package</text>
+
+  <rect x="680" y="151" width="302" height="148" rx="17" fill="#13233A" stroke="#3B607B" stroke-width="1.5"/>
+  <rect x="680" y="151" width="7" height="148" rx="3.5" fill="#80B8FF"/>
+  <text x="703" y="186" fill="#F4F8FE" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700">Web engagement</text>
+  <text x="703" y="221" fill="#80B8FF" font-family="Arial, Helvetica, sans-serif" font-size="32" font-weight="700">4</text>
+  <text x="737" y="220" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="15">packages observed</text>
+  <text x="703" y="263" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="14">SDK, forms SDK, and</text>
+  <text x="703" y="283" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="14">linting support</text>
+
+  <rect x="42" y="317" width="301" height="148" rx="17" fill="#13233A" stroke="#3B607B" stroke-width="1.5"/>
+  <rect x="42" y="317" width="7" height="148" rx="3.5" fill="#F2B383"/>
+  <text x="65" y="352" fill="#F4F8FE" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700">Partner projects</text>
+  <text x="65" y="390" fill="#F2B383" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="700">Custom-script package</text>
+  <text x="65" y="429" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="14">Metadata described partner</text>
+  <text x="65" y="449" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="14">project artifacts</text>
+
+  <rect x="361" y="317" width="301" height="148" rx="17" fill="#13233A" stroke="#3B607B" stroke-width="1.5"/>
+  <rect x="361" y="317" width="7" height="148" rx="3.5" fill="#E3D589"/>
+  <text x="384" y="352" fill="#F4F8FE" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700">CLI tooling</text>
+  <text x="384" y="390" fill="#E3D589" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="700">Internal CLI package</text>
+  <text x="384" y="429" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="14">Available through the</text>
+  <text x="384" y="449" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="14">anonymous index</text>
+
+  <rect x="680" y="317" width="302" height="148" rx="17" fill="#13233A" stroke="#3B607B" stroke-width="1.5"/>
+  <rect x="680" y="317" width="7" height="148" rx="3.5" fill="#96E0B2"/>
+  <text x="703" y="352" fill="#F4F8FE" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700">Publishing &amp; media</text>
+  <text x="703" y="387" fill="#96E0B2" font-family="Arial, Helvetica, sans-serif" font-size="32" font-weight="700">30</text>
+  <text x="755" y="386" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="15">packages observed</text>
+  <text x="703" y="429" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="14">Embedded UI and audio</text>
+  <text x="703" y="449" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="14">components among them</text>
+
+  <rect x="42" y="489" width="940" height="78" rx="15" fill="#1A2B3D" stroke="#546E85" stroke-width="1.5"/>
+  <rect x="60" y="507" width="154" height="42" rx="10" fill="#332B4D" stroke="#B69CDE"/>
+  <text x="137" y="534" text-anchor="middle" fill="#E4D5FF" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700">4 VIRTUAL</text>
+  <text x="238" y="520" fill="#F4F8FE" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700">also listed</text>
+  <text x="238" y="544" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="14">Combined entry points; exact names withheld</text>
+  <text x="956" y="520" text-anchor="end" fill="#9AF5E0" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700">83+ versions</text>
+  <text x="956" y="544" text-anchor="end" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="14">across six LOCAL repositories</text>
+  <text x="42" y="592" fill="#8EA6C0" font-family="Arial, Helvetica, sans-serif" font-size="12">Illustration based on the report, not a screenshot. Package counts and package-version counts are different measures.</text>
+</svg>
