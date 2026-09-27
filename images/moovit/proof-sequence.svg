@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 700" role="img" aria-labelledby="title desc">
+  <title id="title">How the Moovit credential response was validated</title>
+  <desc id="desc">Four steps: an anonymous GET request to a redacted mobile-backend host returned a complete temporary AWS credential set; the researcher called STS GetCallerIdentity; the result identified a production assumed role. Resource listing attempts returned AccessDenied.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#111d30"/><stop offset="1" stop-color="#0c1321"/></linearGradient>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7.5" refY="4.5" orient="auto"><path d="M1 1 L8 4.5 L1 8" fill="none" stroke="#9ab9ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  </defs>
+  <rect width="1100" height="700" rx="30" fill="url(#bg)"/>
+  <rect x="1" y="1" width="1098" height="698" rx="29" fill="none" stroke="#34445f" stroke-width="2"/>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="50" y="68" fill="#f3f7ff" font-size="33" font-weight="700">Proof of concept: from HTTP to AWS identity</text>
+    <text x="50" y="105" fill="#adbed3" font-size="19">Only the STS identity check succeeded; no application or resource data was read.</text>
+    <rect x="50" y="156" width="235" height="284" rx="20" fill="#19283e" stroke="#3b5874" stroke-width="2"/>
+    <rect x="50" y="156" width="235" height="8" rx="4" fill="#61dfce"/>
+    <circle cx="84" cy="205" r="22" fill="#16483f"/><text x="77" y="214" fill="#8df2e2" font-size="24" font-weight="700">1</text>
+    <text x="70" y="265" fill="#f3f7ff" font-size="23" font-weight="700">Anonymous GET</text>
+    <text x="70" y="301" fill="#b9c9df" font-size="18">Root path of a mobile</text>
+    <text x="70" y="330" fill="#b9c9df" font-size="18">backend; no login or</text>
+    <text x="70" y="359" fill="#b9c9df" font-size="18">client proof required.</text>
+    <rect x="70" y="390" width="125" height="31" rx="15" fill="#124a43"/><text x="85" y="412" fill="#8df2e2" font-size="16" font-weight="700">GET /</text>
+    <rect x="305" y="156" width="235" height="284" rx="20" fill="#19283e" stroke="#3b5874" stroke-width="2"/>
+    <rect x="305" y="156" width="235" height="8" rx="4" fill="#9ab9ff"/>
+    <circle cx="339" cy="205" r="22" fill="#303d62"/><text x="332" y="214" fill="#c9d8ff" font-size="24" font-weight="700">2</text>
+    <text x="325" y="265" fill="#f3f7ff" font-size="23" font-weight="700">200 OK JSON</text>
+    <text x="325" y="301" fill="#b9c9df" font-size="18">Access key, secret key,</text>
+    <text x="325" y="330" fill="#b9c9df" font-size="18">session token, and</text>
+    <text x="325" y="359" fill="#b9c9df" font-size="18">expiration returned.</text>
+    <rect x="325" y="390" width="143" height="31" rx="15" fill="#303d62"/><text x="339" y="412" fill="#c9d8ff" font-size="16" font-weight="700">Values hidden</text>
+    <rect x="560" y="156" width="235" height="284" rx="20" fill="#19283e" stroke="#3b5874" stroke-width="2"/>
+    <rect x="560" y="156" width="235" height="8" rx="4" fill="#f3c879"/>
+    <circle cx="594" cy="205" r="22" fill="#514127"/><text x="587" y="214" fill="#ffe4ad" font-size="24" font-weight="700">3</text>
+    <text x="580" y="265" fill="#f3f7ff" font-size="23" font-weight="700">AWS STS check</text>
+    <text x="580" y="301" fill="#b9c9df" font-size="18">Returned credentials</text>
+    <text x="580" y="330" fill="#b9c9df" font-size="18">used for identity</text>
+    <text x="580" y="359" fill="#b9c9df" font-size="18">verification only.</text>
+    <rect x="580" y="390" width="185" height="31" rx="15" fill="#514127"/><text x="593" y="412" fill="#ffe4ad" font-size="15" font-weight="700">GetCallerIdentity</text>
+    <rect x="815" y="156" width="235" height="284" rx="20" fill="#19283e" stroke="#3b5874" stroke-width="2"/>
+    <rect x="815" y="156" width="235" height="8" rx="4" fill="#eaa9de"/>
+    <circle cx="849" cy="205" r="22" fill="#49324f"/><text x="842" y="214" fill="#f5c7ed" font-size="24" font-weight="700">4</text>
+    <text x="835" y="265" fill="#f3f7ff" font-size="22" font-weight="700">Production role</text>
+    <text x="835" y="301" fill="#b9c9df" font-size="18">STS returned an</text>
+    <text x="835" y="330" fill="#b9c9df" font-size="18">assumed-role identity</text>
+    <text x="835" y="359" fill="#b9c9df" font-size="18">in a production account.</text>
+    <rect x="835" y="390" width="164" height="31" rx="15" fill="#49324f"/><text x="849" y="412" fill="#f5c7ed" font-size="16" font-weight="700">IDs redacted</text>
+    <rect x="50" y="477" width="1000" height="164" rx="20" fill="#172941" stroke="#3e6084" stroke-width="2"/>
+    <circle cx="90" cy="526" r="20" fill="#503843"/><path d="M81 517 L99 535 M99 517 L81 535" stroke="#ffb3bd" stroke-width="3.5" stroke-linecap="round"/>
+    <text x="127" y="530" fill="#f3f7ff" font-size="22" font-weight="700">What the proof did not show</text>
+    <text x="77" y="574" fill="#c4d2e3" font-size="18">S3, Kinesis, Firehose, and SQS list attempts all returned AccessDenied.</text>
+    <text x="77" y="606" fill="#c4d2e3" font-size="18">Those denials limit the demonstrated impact; they do not reveal the roles' full policies.</text>
+  </g>
+</svg>
