@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="510" viewBox="0 0 960 510" role="img" aria-labelledby="title desc">
+  <title id="title">Researcher-owned session proof of concept</title>
+  <desc id="desc">Four request rows show unauthenticated session issuance, a normal JSON save, a traversal save targeting a second test session, and a direct session swap. All three saves returned HTTP 200 and the success message. The session values are illustrative replacements.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#121d31"/><stop offset="1" stop-color="#0b1221"/></linearGradient>
+    <linearGradient id="line" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#59bfff"/><stop offset="1" stop-color="#b891ff"/></linearGradient>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9" fill="none" stroke="#8ea4c5" stroke-width="1.6"/></marker>
+  </defs>
+  <rect width="960" height="510" rx="22" fill="url(#bg)"/>
+  <rect x="1" y="1" width="958" height="508" rx="21" fill="none" stroke="#34455f"/>
+  <rect x="34" y="25" width="6" height="46" rx="3" fill="url(#line)"/>
+  <text x="55" y="49" fill="#f1f5fc" font-family="Arial,sans-serif" font-size="24" font-weight="700">Proof of concept: two sessions I owned</text>
+  <text x="55" y="76" fill="#adc0d9" font-family="Arial,sans-serif" font-size="15">Same save endpoint, different client-supplied directory</text>
+
+  <path d="M64 132V426" fill="none" stroke="#48627e" stroke-width="3"/>
+
+  <rect x="34" y="113" width="60" height="42" rx="13" fill="#17385a" stroke="#5bbcff" stroke-width="2"/>
+  <text x="64" y="141" fill="#b9e6ff" font-family="Arial,sans-serif" font-size="16" font-weight="700" text-anchor="middle">01</text>
+  <rect x="112" y="102" width="568" height="65" rx="13" fill="#182943" stroke="#456787"/>
+  <text x="132" y="126" fill="#84d0ff" font-family="Consolas,monospace" font-size="16">GET /crunch/get_sd</text>
+  <text x="132" y="150" fill="#cbd9e9" font-family="Arial,sans-serif" font-size="14">No login required; request two sessions</text>
+  <path d="M682 134h40" fill="none" stroke="#8ea4c5" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="730" y="105" width="194" height="60" rx="12" fill="#173329" stroke="#46b991"/>
+  <text x="748" y="129" fill="#9cf0cb" font-family="Arial,sans-serif" font-size="14" font-weight="700">SESSION IDS</text>
+  <text x="748" y="150" fill="#dcece5" font-family="Consolas,monospace" font-size="14">A and B issued</text>
+
+  <rect x="34" y="206" width="60" height="42" rx="13" fill="#17385a" stroke="#5bbcff" stroke-width="2"/>
+  <text x="64" y="234" fill="#b9e6ff" font-family="Arial,sans-serif" font-size="16" font-weight="700" text-anchor="middle">02</text>
+  <rect x="112" y="195" width="568" height="65" rx="13" fill="#182943" stroke="#456787"/>
+  <text x="132" y="219" fill="#84d0ff" font-family="Consolas,monospace" font-size="16">POST /crunch/save_json</text>
+  <text x="132" y="243" fill="#cbd9e9" font-family="Consolas,monospace" font-size="14">sd=data_AAAAAA    data={"probe":"baseline"}</text>
+  <path d="M682 227h40" fill="none" stroke="#8ea4c5" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="730" y="198" width="194" height="60" rx="12" fill="#173329" stroke="#46b991"/>
+  <text x="748" y="222" fill="#9cf0cb" font-family="Arial,sans-serif" font-size="14" font-weight="700">HTTP 200</text>
+  <text x="748" y="243" fill="#dcece5" font-family="Arial,sans-serif" font-size="13">Success: data saved</text>
+
+  <rect x="34" y="299" width="60" height="42" rx="13" fill="#4a302b" stroke="#f3ae72" stroke-width="2"/>
+  <text x="64" y="327" fill="#ffe2b8" font-family="Arial,sans-serif" font-size="16" font-weight="700" text-anchor="middle">03</text>
+  <rect x="112" y="288" width="568" height="65" rx="13" fill="#2b2b3a" stroke="#9f748e"/>
+  <text x="132" y="312" fill="#d7b4ff" font-family="Consolas,monospace" font-size="16">POST /crunch/save_json</text>
+  <text x="132" y="336" fill="#ffe0bf" font-family="Consolas,monospace" font-size="14">sd=../data_BBBBBB    &quot;my other session&quot;</text>
+  <path d="M682 320h40" fill="none" stroke="#f0ad76" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="730" y="291" width="194" height="60" rx="12" fill="#4a302b" stroke="#f3ae72"/>
+  <text x="748" y="315" fill="#ffd4a5" font-family="Arial,sans-serif" font-size="14" font-weight="700">HTTP 200</text>
+  <text x="748" y="336" fill="#ffe4d2" font-family="Arial,sans-serif" font-size="13">Success: data saved</text>
+
+  <rect x="34" y="392" width="60" height="42" rx="13" fill="#4a302b" stroke="#f3ae72" stroke-width="2"/>
+  <text x="64" y="420" fill="#ffe2b8" font-family="Arial,sans-serif" font-size="16" font-weight="700" text-anchor="middle">04</text>
+  <rect x="112" y="381" width="568" height="65" rx="13" fill="#2b2b3a" stroke="#9f748e"/>
+  <text x="132" y="405" fill="#d7b4ff" font-family="Consolas,monospace" font-size="16">POST /crunch/save_json</text>
+  <text x="132" y="429" fill="#ffe0bf" font-family="Consolas,monospace" font-size="14">sd=data_BBBBBB    direct session swap</text>
+  <path d="M682 413h40" fill="none" stroke="#f0ad76" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="730" y="384" width="194" height="60" rx="12" fill="#4a302b" stroke="#f3ae72"/>
+  <text x="748" y="408" fill="#ffd4a5" font-family="Arial,sans-serif" font-size="14" font-weight="700">HTTP 200</text>
+  <text x="748" y="429" fill="#ffe4d2" font-family="Arial,sans-serif" font-size="13">Success: data saved</text>
+
+  <text x="34" y="482" fill="#9eb1ca" font-family="Arial,sans-serif" font-size="13">A and B are researcher-owned. Session values and JSON markers are illustrative; no file read-back was available.</text>
+</svg>
