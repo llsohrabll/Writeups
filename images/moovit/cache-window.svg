@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 660" role="img" aria-labelledby="title desc">
+  <title id="title">Cache lifetimes on the credential response</title>
+  <desc id="desc">The observed response used Cache-Control max-age 300 and s-maxage 60. A browser could treat it as fresh for five minutes, while a shared CloudFront cache could treat it as fresh for one minute. A CloudFront hit was observed; reuse across two different callers was a risk, not separately proven.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#111d30"/><stop offset="1" stop-color="#0c1321"/></linearGradient>
+    <linearGradient id="browser" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#82b6ff"/><stop offset="1" stop-color="#c5a1ff"/></linearGradient>
+    <linearGradient id="shared" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#55d7c5"/><stop offset="1" stop-color="#8ff0cf"/></linearGradient>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7.5" refY="4.5" orient="auto"><path d="M1 1 L8 4.5 L1 8" fill="none" stroke="#9ab9ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  </defs>
+  <rect width="1100" height="660" rx="30" fill="url(#bg)"/>
+  <rect x="1" y="1" width="1098" height="658" rx="29" fill="none" stroke="#34445f" stroke-width="2"/>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="50" y="68" fill="#f3f7ff" font-size="33" font-weight="700">A credential response entered a shared cache</text>
+    <text x="50" y="105" fill="#adbed3" font-size="19">The header gave browsers five minutes and shared caches one minute of freshness.</text>
+
+    <rect x="50" y="143" width="1000" height="294" rx="20" fill="#17243a" stroke="#3b5874" stroke-width="2"/>
+    <rect x="70" y="166" width="500" height="36" rx="18" fill="#29384e"/>
+    <text x="86" y="191" fill="#dce8fb" font-family="Consolas, 'Courier New', monospace" font-size="18">Cache-Control: max-age=300, s-maxage=60</text>
+    <text x="73" y="269" fill="#f3f7ff" font-size="20" font-weight="700">Browser</text>
+    <text x="73" y="294" fill="#b9c9df" font-size="15">max-age=300</text>
+    <text x="73" y="353" fill="#f3f7ff" font-size="20" font-weight="700">Shared CDN</text>
+    <text x="73" y="378" fill="#b9c9df" font-size="15">s-maxage=60</text>
+
+    <g stroke="#45607e" stroke-width="1.5"><path d="M270 222 V394 M410 222 V394 M550 222 V394 M690 222 V394 M830 222 V394 M970 222 V394"/></g>
+    <g fill="#9eafc5" font-size="15"><text x="265" y="214">0</text><text x="399" y="214">1 min</text><text x="539" y="214">2 min</text><text x="679" y="214">3 min</text><text x="819" y="214">4 min</text><text x="959" y="214">5 min</text></g>
+    <rect x="270" y="246" width="700" height="42" rx="12" fill="#2a395b"/>
+    <rect x="270" y="246" width="700" height="42" rx="12" fill="url(#browser)"/>
+    <text x="528" y="273" fill="#10203a" font-size="19" font-weight="700">Fresh for up to 5 minutes</text>
+    <rect x="270" y="330" width="700" height="42" rx="12" fill="#26394a"/>
+    <rect x="270" y="330" width="140" height="42" rx="12" fill="url(#shared)"/>
+    <text x="434" y="358" fill="#b9c9df" font-size="18">Shared cache freshness ends after 1 minute</text>
+    <text x="75" y="415" fill="#9feadf" font-size="17" font-weight="700">Observed: a CloudFront cache hit on the credential response.</text>
+
+    <rect x="50" y="468" width="1000" height="143" rx="20" fill="#172941" stroke="#3e6084" stroke-width="2"/>
+    <rect x="75" y="490" width="255" height="92" rx="14" fill="#203751"/>
+    <circle cx="103" cy="517" r="9" fill="#8bdacb"/>
+    <text x="122" y="524" fill="#f3f7ff" font-size="18" font-weight="700">Caller A</text>
+    <text x="95" y="556" fill="#bed0e5" font-size="16">Requests a temporary session</text>
+    <path d="M342 537 H378" stroke="#9ab9ff" stroke-width="3" marker-end="url(#arrow)"/>
+    <rect x="390" y="490" width="320" height="92" rx="14" fill="#203751"/>
+    <path d="M417 520 C408 507 426 500 433 511 C443 499 463 510 456 526 C473 530 467 548 450 548 H420 C402 548 402 531 417 520 Z" fill="none" stroke="#79c6f8" stroke-width="3"/>
+    <text x="480" y="524" fill="#f3f7ff" font-size="18" font-weight="700">CloudFront entry</text>
+    <text x="480" y="554" fill="#bed0e5" font-size="16">Credential response cached</text>
+    <path d="M722 537 H758" stroke="#9ab9ff" stroke-width="3" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+    <rect x="770" y="490" width="255" height="92" rx="14" fill="#2c314f" stroke="#665481" stroke-dasharray="6 5"/>
+    <circle cx="798" cy="517" r="9" fill="#dda9ec"/>
+    <text x="817" y="524" fill="#f3f7ff" font-size="18" font-weight="700">Caller B</text>
+    <text x="791" y="556" fill="#d4c2e2" font-size="16">Possible reuse, not tested</text>
+    <text x="51" y="634" fill="#9eafc5" font-size="16">A cache hit was observed. Cross-caller sharing is the inferred risk, not a separately demonstrated event.</text>
+  </g>
+</svg>
