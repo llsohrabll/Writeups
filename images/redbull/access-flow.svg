@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="420" viewBox="0 0 1024 420" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Anonymous package access and inconsistent authorization</title>
+  <desc id="desc">An anonymous visitor could list repositories and download an internal npm package from an Artifactory service, while a deeper storage-list operation was denied.</desc>
+  <rect width="1024" height="420" rx="24" fill="#0B1425"/>
+  <rect x="1" y="1" width="1022" height="418" rx="23" stroke="#28405C" stroke-width="2"/>
+  <text x="42" y="54" fill="#F4F8FE" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700">What the access check showed</text>
+  <text x="42" y="81" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="15">Names and routes are intentionally omitted.</text>
+
+  <rect x="42" y="124" width="240" height="174" rx="18" fill="#13233A" stroke="#4C6787" stroke-width="2"/>
+  <circle cx="162" cy="170" r="19" stroke="#A5D8FF" stroke-width="3"/>
+  <path d="M126 224c5-19 17-29 36-29s31 10 36 29" stroke="#A5D8FF" stroke-width="3" stroke-linecap="round"/>
+  <text x="162" y="259" text-anchor="middle" fill="#F4F8FE" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="700">Anonymous visitor</text>
+
+  <path d="M300 182h72" stroke="#62D5BD" stroke-width="4" stroke-linecap="round"/>
+  <path d="m365 173 10 9-10 9" stroke="#62D5BD" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="337" y="157" text-anchor="middle" fill="#62D5BD" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700">HTTP 200</text>
+
+  <rect x="391" y="124" width="240" height="174" rx="18" fill="#13233A" stroke="#4C6787" stroke-width="2"/>
+  <rect x="482" y="155" width="58" height="48" rx="7" stroke="#80B8FF" stroke-width="3"/>
+  <path d="M490 169h42M490 179h42M490 189h28" stroke="#80B8FF" stroke-width="3" stroke-linecap="round"/>
+  <text x="511" y="241" text-anchor="middle" fill="#F4F8FE" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="700">Artifactory</text>
+  <text x="511" y="265" text-anchor="middle" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="15">Repository listing</text>
+
+  <path d="M650 182h72" stroke="#62D5BD" stroke-width="4" stroke-linecap="round"/>
+  <path d="m715 173 10 9-10 9" stroke="#62D5BD" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="687" y="157" text-anchor="middle" fill="#62D5BD" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700">HTTP 200</text>
+
+  <rect x="742" y="124" width="240" height="174" rx="18" fill="#13233A" stroke="#4C6787" stroke-width="2"/>
+  <path d="M832 157h59l12 17v45h-83v-62h12Z" stroke="#DABEFF" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M833 187h55M833 198h43" stroke="#DABEFF" stroke-width="3" stroke-linecap="round"/>
+  <text x="862" y="241" text-anchor="middle" fill="#F4F8FE" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="700">Package archive</text>
+  <text x="862" y="265" text-anchor="middle" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="15">Internal source files</text>
+
+  <rect x="42" y="332" width="940" height="50" rx="12" fill="#1B2636" stroke="#AD7853" stroke-width="1.5"/>
+  <circle cx="69" cy="357" r="10" fill="#F2B383"/>
+  <path d="M65 353l8 8m0-8-8 8" stroke="#1B2636" stroke-width="2" stroke-linecap="round"/>
+  <text x="90" y="363" fill="#FBE3D1" font-family="Arial, Helvetica, sans-serif" font-size="16">A deeper storage-list operation returned HTTP 403, despite the accessible index and download.</text>
+</svg>
