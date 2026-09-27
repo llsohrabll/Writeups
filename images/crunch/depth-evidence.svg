@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="440" viewBox="0 0 960 440" role="img" aria-labelledby="title desc">
+  <title id="title">Traversal depth controls</title>
+  <desc id="desc">A path-depth ladder using one researcher-owned session returned HTTP 200 for one through five parent-directory components and HTTP 500 for six. A path ending in the standard tmp directory returned HTTP 200 at four parent components while adjacent-depth controls returned HTTP 500.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#121d31"/><stop offset="1" stop-color="#0b1221"/></linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#5bc5ff"/><stop offset="1" stop-color="#b690ff"/></linearGradient>
+  </defs>
+  <rect width="960" height="440" rx="22" fill="url(#bg)"/>
+  <rect x="1" y="1" width="958" height="438" rx="21" fill="none" stroke="#34455f"/>
+  <rect x="34" y="26" width="6" height="45" rx="3" fill="url(#accent)"/>
+  <text x="55" y="50" fill="#f1f5fc" font-family="Arial,sans-serif" font-size="24" font-weight="700">The response changed with traversal depth</text>
+  <text x="55" y="77" fill="#adc0d9" font-family="Arial,sans-serif" font-size="15">Controlled requests help separate a real path effect from an always-successful endpoint.</text>
+
+  <rect x="34" y="111" width="492" height="241" rx="16" fill="#172641" stroke="#456787" stroke-width="1.5"/>
+  <text x="58" y="146" fill="#8ad4ff" font-family="Arial,sans-serif" font-size="17" font-weight="700">Parent-directory ladder</text>
+  <text x="58" y="174" fill="#c4d5e9" font-family="Consolas,monospace" font-size="14">sd = data_AAAAAA + ("/.." repeated n times)</text>
+  <path d="M84 254h390" fill="none" stroke="#54718e" stroke-width="3"/>
+
+  <rect x="61" y="216" width="64" height="76" rx="12" fill="#173329" stroke="#46b991"/>
+  <text x="93" y="244" fill="#dcece5" font-family="Arial,sans-serif" font-size="16" font-weight="700" text-anchor="middle">n=1</text>
+  <text x="93" y="272" fill="#9cf0cb" font-family="Arial,sans-serif" font-size="17" font-weight="700" text-anchor="middle">200</text>
+  <rect x="136" y="216" width="64" height="76" rx="12" fill="#173329" stroke="#46b991"/>
+  <text x="168" y="244" fill="#dcece5" font-family="Arial,sans-serif" font-size="16" font-weight="700" text-anchor="middle">n=2</text>
+  <text x="168" y="272" fill="#9cf0cb" font-family="Arial,sans-serif" font-size="17" font-weight="700" text-anchor="middle">200</text>
+  <rect x="211" y="216" width="64" height="76" rx="12" fill="#173329" stroke="#46b991"/>
+  <text x="243" y="244" fill="#dcece5" font-family="Arial,sans-serif" font-size="16" font-weight="700" text-anchor="middle">n=3</text>
+  <text x="243" y="272" fill="#9cf0cb" font-family="Arial,sans-serif" font-size="17" font-weight="700" text-anchor="middle">200</text>
+  <rect x="286" y="216" width="64" height="76" rx="12" fill="#173329" stroke="#46b991"/>
+  <text x="318" y="244" fill="#dcece5" font-family="Arial,sans-serif" font-size="16" font-weight="700" text-anchor="middle">n=4</text>
+  <text x="318" y="272" fill="#9cf0cb" font-family="Arial,sans-serif" font-size="17" font-weight="700" text-anchor="middle">200</text>
+  <rect x="361" y="216" width="64" height="76" rx="12" fill="#173329" stroke="#46b991"/>
+  <text x="393" y="244" fill="#dcece5" font-family="Arial,sans-serif" font-size="16" font-weight="700" text-anchor="middle">n=5</text>
+  <text x="393" y="272" fill="#9cf0cb" font-family="Arial,sans-serif" font-size="17" font-weight="700" text-anchor="middle">200</text>
+  <rect x="436" y="216" width="64" height="76" rx="12" fill="#412b34" stroke="#e5898b"/>
+  <text x="468" y="244" fill="#f5d9dd" font-family="Arial,sans-serif" font-size="16" font-weight="700" text-anchor="middle">n=6</text>
+  <text x="468" y="272" fill="#ff9fa5" font-family="Arial,sans-serif" font-size="17" font-weight="700" text-anchor="middle">500</text>
+  <text x="58" y="327" fill="#9eb1ca" font-family="Arial,sans-serif" font-size="13">Same endpoint and session; only the number of /.. segments changed.</text>
+
+  <rect x="542" y="111" width="384" height="241" rx="16" fill="#2a2635" stroke="#826da4" stroke-width="1.5"/>
+  <text x="566" y="146" fill="#d7b4ff" font-family="Arial,sans-serif" font-size="17" font-weight="700">Specific temporary-directory probe</text>
+  <text x="566" y="174" fill="#c4d5e9" font-family="Arial,sans-serif" font-size="14">A standard OS directory, not a private path</text>
+  <rect x="566" y="195" width="336" height="79" rx="12" fill="#173329" stroke="#46b991"/>
+  <text x="582" y="221" fill="#dcece5" font-family="Consolas,monospace" font-size="13">data_AAAAAA/../../../../tmp</text>
+  <text x="582" y="251" fill="#9cf0cb" font-family="Arial,sans-serif" font-size="17" font-weight="700">HTTP 200 · Success: data saved</text>
+  <text x="566" y="303" fill="#f0b4b3" font-family="Arial,sans-serif" font-size="14" font-weight="700">Neighboring depths aimed at /tmp: HTTP 500</text>
+  <text x="566" y="327" fill="#bfaecf" font-family="Arial,sans-serif" font-size="13">That contrast depends on the resolved target location.</text>
+
+  <rect x="34" y="372" width="892" height="39" rx="10" fill="#1c2d46" stroke="#3b5775"/>
+  <text x="52" y="397" fill="#d4e2f2" font-family="Arial,sans-serif" font-size="14">Observation: status and message only. The server-selected JSON file could not be retrieved over HTTP.</text>
+</svg>
