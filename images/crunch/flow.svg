@@ -34,5 +34,5 @@
   <text x="672" y="249" fill="#ffd4a5" font-family="Arial,sans-serif" font-size="16" font-weight="700">Beyond session root</text>
   <text x="672" y="279" fill="#f3d6bc" font-family="Arial,sans-serif" font-size="15">Save reported successful</text>
 
-  <text x="34" y="343" fill="#93a9c6" font-family="Arial,sans-serif" font-size="13">Researcher-owned sessions only · identifiers and exact endpoints withheld · saved file not read back</text>
+  <text x="34" y="343" fill="#93a9c6" font-family="Arial,sans-serif" font-size="13">Researcher-owned sessions only · host and real session IDs withheld · saved file not read back</text>
 </svg>
