@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Exposed package archive</title>
+  <desc id="desc">An open package box reveals an internal code archive.</desc>
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#213d69"/>
+      <stop offset="1" stop-color="#182744"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#base)"/>
+  <path d="M48 27h27l10 10v39H48z" fill="#243e5a" stroke="#c7f9f3" stroke-width="3.5" stroke-linejoin="round"/>
+  <path d="M75 27v11h10M56 48h21M56 57h16" fill="none" stroke="#c7f9f3" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="m32 62 32 15 32-15v27L64 104 32 89z" fill="#263d57" stroke="#ffbc76" stroke-width="3.5" stroke-linejoin="round"/>
+  <path d="M64 77v27M32 62l-11 15 32 15 11-15m32-15 11 15-32 15-11-15" fill="#86543b" fill-opacity=".28" stroke="#ffbc76" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M64 82v13" fill="none" stroke="#ffe3b9" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="101" cy="31" r="9" fill="#79dcdf"/>
+  <path d="m97 31 3 3 5-6" fill="none" stroke="#1a2940" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
