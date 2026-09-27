@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="360" viewBox="0 0 1080 360" role="img" aria-labelledby="title desc">
+  <title id="title">Health endpoint information disclosure</title>
+  <desc id="desc">An unauthenticated request to a public health endpoint returns an overly detailed response containing masked cloud resource names and service telemetry.</desc>
+  <rect width="1080" height="360" rx="24" fill="#101a2b"/>
+  <rect x="28" y="32" width="1024" height="296" rx="18" fill="#16243a" stroke="#38516f" stroke-width="2"/>
+  <text x="54" y="73" fill="#9eb8da" font-family="Arial, sans-serif" font-size="20" font-weight="700">OBSERVED FLOW</text>
+  <rect x="54" y="110" width="248" height="158" rx="16" fill="#233a5a" stroke="#88a9d8" stroke-width="2"/>
+  <text x="78" y="155" fill="#eef4ff" font-family="Arial, sans-serif" font-size="23" font-weight="700">Unauthenticated</text>
+  <text x="78" y="186" fill="#eef4ff" font-family="Arial, sans-serif" font-size="23" font-weight="700">visitor</text>
+  <text x="78" y="225" fill="#a9c1e2" font-family="Consolas, monospace" font-size="19">GET /health</text>
+  <path d="M314 189 H387" stroke="#65d4c5" stroke-width="5" stroke-linecap="round"/>
+  <path d="M376 178 L392 189 L376 200" fill="none" stroke="#65d4c5" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="402" y="110" width="236" height="158" rx="16" fill="#1d3445" stroke="#65d4c5" stroke-width="2"/>
+  <text x="426" y="158" fill="#eef4ff" font-family="Arial, sans-serif" font-size="23" font-weight="700">Public API</text>
+  <text x="426" y="191" fill="#eef4ff" font-family="Arial, sans-serif" font-size="23" font-weight="700">health check</text>
+  <text x="426" y="231" fill="#a6eddf" font-family="Arial, sans-serif" font-size="18">No auth required</text>
+  <path d="M650 189 H723" stroke="#65d4c5" stroke-width="5" stroke-linecap="round"/>
+  <path d="M712 178 L728 189 L712 200" fill="none" stroke="#65d4c5" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="738" y="110" width="288" height="158" rx="16" fill="#342d50" stroke="#b7a3eb" stroke-width="2"/>
+  <text x="762" y="153" fill="#eef4ff" font-family="Arial, sans-serif" font-size="22" font-weight="700">Detailed response</text>
+  <text x="762" y="189" fill="#dfd3fb" font-family="Arial, sans-serif" font-size="18">AWS resources: [redacted]</text>
+  <text x="762" y="218" fill="#dfd3fb" font-family="Arial, sans-serif" font-size="18">Service names: [redacted]</text>
+  <text x="762" y="247" fill="#dfd3fb" font-family="Arial, sans-serif" font-size="18">Telemetry: [redacted]</text>
+  <text x="54" y="307" fill="#9eb8da" font-family="Arial, sans-serif" font-size="17">A public check should report availability, not expose the internal service map.</text>
+</svg>
