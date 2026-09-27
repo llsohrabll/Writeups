@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="510" viewBox="0 0 1024 510" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Anonymous Artifactory response matrix</title>
+  <desc id="desc">Four unauthenticated read attempts. Repository listing, an HTML package index, and a direct npm archive download returned HTTP 200. A deep storage-list call returned HTTP 403. The successful archive download was 61,421 bytes and had gzip headers.</desc>
+  <rect width="1024" height="510" rx="24" fill="#0B1425"/>
+  <rect x="1" y="1" width="1022" height="508" rx="23" stroke="#28405C" stroke-width="2"/>
+  <text x="42" y="54" fill="#F4F8FE" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700">Four read paths, one inconsistent policy</text>
+  <text x="42" y="84" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="15">All requests were unauthenticated during testing on September 19, 2026.</text>
+
+  <rect x="42" y="116" width="940" height="48" rx="12" fill="#1E344A"/>
+  <text x="70" y="146" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" letter-spacing="1">READ OPERATION</text>
+  <text x="719" y="146" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" letter-spacing="1">OBSERVED</text>
+
+  <rect x="42" y="173" width="940" height="66" rx="11" fill="#13233A" stroke="#34516B"/>
+  <circle cx="75" cy="206" r="18" fill="#1F4F4E"/>
+  <text x="75" y="212" text-anchor="middle" fill="#9AF5E0" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700">01</text>
+  <text x="111" y="201" fill="#F4F8FE" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700">Repository API</text>
+  <text x="111" y="222" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="13">JSON inventory: 6 LOCAL + 4 VIRTUAL</text>
+  <rect x="716" y="186" width="112" height="40" rx="12" fill="#174C43"/>
+  <text x="772" y="212" text-anchor="middle" fill="#9AF5E0" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700">200</text>
+  <text x="847" y="212" fill="#9AF5E0" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700">VISIBLE</text>
+
+  <rect x="42" y="248" width="940" height="66" rx="11" fill="#13233A" stroke="#34516B"/>
+  <circle cx="75" cy="281" r="18" fill="#1F4F4E"/>
+  <text x="75" y="287" text-anchor="middle" fill="#9AF5E0" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700">02</text>
+  <text x="111" y="276" fill="#F4F8FE" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700">HTML repository index</text>
+  <text x="111" y="297" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="13">Browsable namespaces and package names</text>
+  <rect x="716" y="261" width="112" height="40" rx="12" fill="#174C43"/>
+  <text x="772" y="287" text-anchor="middle" fill="#9AF5E0" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700">200</text>
+  <text x="847" y="287" fill="#9AF5E0" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700">VISIBLE</text>
+
+  <rect x="42" y="323" width="940" height="66" rx="11" fill="#13233A" stroke="#34516B"/>
+  <circle cx="75" cy="356" r="18" fill="#1F4F4E"/>
+  <text x="75" y="362" text-anchor="middle" fill="#9AF5E0" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700">03</text>
+  <text x="111" y="351" fill="#F4F8FE" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700">Direct npm archive download</text>
+  <text x="111" y="372" fill="#AFC2D9" font-family="Arial, Helvetica, sans-serif" font-size="13">61,421 bytes · application/x-gzip · 1f 8b magic bytes</text>
+  <rect x="716" y="336" width="112" height="40" rx="12" fill="#174C43"/>
+  <text x="772" y="362" text-anchor="middle" fill="#9AF5E0" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700">200</text>
+  <text x="847" y="362" fill="#9AF5E0" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700">DOWNLOADED</text>
+
+  <rect x="42" y="398" width="940" height="66" rx="11" fill="#241E2D" stroke="#805F69"/>
+  <circle cx="75" cy="431" r="18" fill="#664438"/>
+  <text x="75" y="437" text-anchor="middle" fill="#F9C9AA" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700">04</text>
+  <text x="111" y="426" fill="#F4F8FE" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700">Deep storage listing</text>
+  <text x="111" y="447" fill="#C4AEB5" font-family="Arial, Helvetica, sans-serif" font-size="13">The ?list&amp;deep=1 operation was denied</text>
+  <rect x="716" y="411" width="112" height="40" rx="12" fill="#603B34"/>
+  <text x="772" y="437" text-anchor="middle" fill="#F9C9AA" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700">403</text>
+  <text x="847" y="437" fill="#F9C9AA" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700">DENIED</text>
+
+  <text x="42" y="492" fill="#8EA6C0" font-family="Arial, Helvetica, sans-serif" font-size="12">Reconstructed from observed responses. The exact target host and internal artifact paths are withheld.</text>
+</svg>
