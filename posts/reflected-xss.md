@@ -5,6 +5,7 @@ date: "2026-09-28"
 author: "Sohrab Kaghazian"
 category: "XSS"
 tags: [xss, reflected_xss, waf_bypass]
+icon: "../images/xss/icon.svg"
 ---
 
 ## The short version
