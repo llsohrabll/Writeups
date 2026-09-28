@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Reflected XSS finding</title>
+  <desc id="desc">A search input reflects injected code into a browser page.</desc>
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#213d69"/>
+      <stop offset="1" stop-color="#182744"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#base)"/>
+  <rect x="20" y="25" width="88" height="79" rx="12" fill="#16364b" stroke="#79dcdf" stroke-width="4"/>
+  <path d="M22 45h84" fill="none" stroke="#79dcdf" stroke-width="3" opacity=".65"/>
+  <circle cx="31" cy="35" r="2.5" fill="#c7f9f3"/>
+  <circle cx="41" cy="35" r="2.5" fill="#c7f9f3" opacity=".65"/>
+  <circle cx="51" cy="35" r="2.5" fill="#c7f9f3" opacity=".4"/>
+  <rect x="29" y="54" width="67" height="19" rx="5" fill="#224457" stroke="#c7f9f3" stroke-width="3"/>
+  <circle cx="40" cy="63" r="4" fill="none" stroke="#c7f9f3" stroke-width="2.5"/>
+  <path d="m43 66 5 5" fill="none" stroke="#c7f9f3" stroke-width="3" stroke-linecap="round"/>
+  <path d="M57 63h25" fill="none" stroke="#ffbc76" stroke-width="3" stroke-linecap="round"/>
+  <path d="m46 77-12 11 12 11m32-22 12 11-12 11" fill="none" stroke="#c7f9f3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M70 76 57 100" fill="none" stroke="#ffbc76" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="100" cy="29" r="10" fill="#ffbc76"/>
+  <path d="M100 24v6m0 4h.01" fill="none" stroke="#1a2940" stroke-width="3" stroke-linecap="round"/>
+</svg>
