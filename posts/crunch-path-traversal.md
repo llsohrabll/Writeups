@@ -90,3 +90,9 @@ The server selected the JSON filename, and I could not retrieve the saved file o
 5. Return a controlled 4xx response for malformed or unauthorized input instead of exposing filesystem-driven 500 errors. Restrict the web process's write permissions so unrelated directories are not writable by the application.
 
 The other route mentioned in the source report, `/crunch/run`, was only explored superficially and is not part of this finding.
+
+## Report status
+
+The University of Basel dashboard showed **Accepted** and **High (7.5)** when this screenshot was captured. It records the displayed submission status, not whether the issue remains reproducible.
+
+![University of Basel report status showing Accepted and High severity 7.5](../images/crunch/report-status.png)

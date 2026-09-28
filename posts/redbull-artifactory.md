@@ -76,3 +76,9 @@ I checked **five downloaded packages for embedded secrets and found none**. This
 5. Review access logs for historical anonymous enumeration and downloads, then verify the policy from an unauthenticated external network after the change.
 
 The host and reusable internal artifact identifiers are withheld here. The counts, response codes, archive characteristics, and validation limits are from the original report.
+
+## Report status
+
+The program dashboard showed **Closed / Duplicate** and **Medium (5.3)** when this screenshot was captured. It records the submission outcome, not whether the issue remains reproducible.
+
+![Red Bull report status showing Medium severity 5.3 and Closed / Duplicate](../images/redbull/report-status.png)

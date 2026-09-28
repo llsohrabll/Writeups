@@ -93,3 +93,9 @@ The report does **not** demonstrate reading application data, listing AWS resour
 5. **Separate environments.** Review why development-hostname variants can issue sessions into production accounts; remove that path unless it is necessary and access-controlled.
 
 _Endpoint hosts, AWS account numbers, role identifiers, and credential values are redacted. Request method, response fields, cache settings, validation calls, results, and dates are retained from the report._
+
+## Report status
+
+The program dashboard showed **In progress**, **Unresolved**, **Duplicate**, and **P2** when this screenshot was captured. These labels record the displayed submission status, not whether the endpoint remains exposed.
+
+![Moovit report status showing In progress, Unresolved, Duplicate, and P2](../images/moovit/report-status.png)

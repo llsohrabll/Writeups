@@ -87,3 +87,9 @@ The response did **not** contain an AWS access key, secret, or session token in 
 ![Recommended split between a minimal public health response and operator-only diagnostics](../images/fireblocks/remediation-boundary.svg)
 
 The observation was made on September 15, 2026. This post does not claim the endpoint is still exposed today.
+
+## Report status
+
+The program dashboard showed **In progress**, **Triaged**, **Duplicate**, and **P4** when this screenshot was captured. These labels record the displayed submission status, not whether the endpoint remains exposed.
+
+![Fireblocks report status showing In progress, Triaged, Duplicate, and P4](../images/fireblocks/report-status.png)
