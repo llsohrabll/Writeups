@@ -130,11 +130,45 @@ test('sitemap includes collections, published notes and existing writeups', asyn
   for (const path of ['/notes/', '/notes/llm-attacks/', '/notes/llm-attacks/injection/', '/writeups/existing/']) assert.ok(xml.includes(`https://nightwatch.team${path}`));
 });
 
-test('existing writeup homepage still links to writeups and now has Notes navigation', async () => {
+test('minimal homepage offers Writeups and Notes without mixing their content', async () => {
   const request = await freshWorker({ 'posts/existing.md': writeup, 'notes/llm-attacks/injection.md': note });
   const home = await (await request('/')).text();
-  assert.match(home, /href="\/writeups\/existing\/"/);
+  assert.match(home, /class="home-destination" href="\/writeups\/"/);
+  assert.match(home, /class="home-destination" href="\/notes\/"/);
+  assert.doesNotMatch(home, /data-search="/);
   assert.doesNotMatch(home, /Prompt injection notes/);
   assert.match(home, /href="\/notes\/"/);
   assert.equal((await request('/writeups/existing/')).status, 200);
+});
+
+test('dedicated writeups archive retains search and excludes learning notes', async () => {
+  const request = await freshWorker({ 'posts/existing.md': writeup, 'notes/llm-attacks/injection.md': note });
+  assert.equal((await request('/writeups')).status, 308);
+  const response = await request('/writeups/');
+  const html = await response.text();
+  assert.equal(response.status, 200);
+  assert.match(html, /href="\/writeups\/existing\/"/);
+  assert.match(html, /src="\/search.js"/);
+  assert.match(html, /data-writeup-search/);
+  assert.doesNotMatch(html, /Prompt injection notes/);
+});
+
+test('registered visualization fences render interactive HTML without enabling raw HTML', async () => {
+  const request = await freshWorker({ 'notes/llm-attacks/flow.md': note + '\n\n```llm-flow\n```\n\n```llm-checkpoint\n```\n\n<script>alert(1)</script>' });
+  const html = await (await request('/notes/llm-attacks/flow/')).text();
+  assert.match(html, /data-llm-flow/);
+  assert.match(html, /data-llm-checkpoint/);
+  assert.match(html, /src="\/llm-visuals.js\?v=/);
+  assert.match(html, /href="\/llm-visuals.css\?v=/);
+  assert.doesNotMatch(html, /<script>alert/);
+  assert.match((await request('/llm-visuals.js')).headers.get('Content-Type'), /text\/javascript/);
+});
+
+test('illustrated policy denies forged authority and gates exact-action approval', async () => {
+  const { evaluateDemoCall, demoCalls } = await import('./llm-visuals.mjs');
+  assert.equal(evaluateDemoCall(demoCalls.read, { workflow: 'summary', approved: false }).allowed, true);
+  assert.equal(evaluateDemoCall(demoCalls.self, { workflow: 'summary', approved: true }).allowed, false);
+  assert.equal(evaluateDemoCall(demoCalls.forged, { workflow: 'email', approved: true }).allowed, false);
+  assert.equal(evaluateDemoCall(demoCalls.self, { workflow: 'email', approved: false }).allowed, false);
+  assert.equal(evaluateDemoCall(demoCalls.self, { workflow: 'email', approved: true }).allowed, true);
 });

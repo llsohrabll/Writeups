@@ -3,6 +3,7 @@ import { parsePost, renderPost, slugify, escape3 } from './content.mjs';
 import { vulnerabilityIcon } from './vulnerability-icons.mjs';
 import { notesIndex, notesTopic, noteArticle, noteSections, notesCss, llmIcon } from './notes.mjs';
 import { page as layoutPage } from './layout.mjs';
+import { llmVisualsCss, llmVisualsJs } from './llm-visuals.mjs';
 const __name = (value) => value;
 var SOURCE = { owner: "llsohrabll", repo: "Writeups" };
 var API = `https://api.github.com/repos/${SOURCE.owner}/${SOURCE.repo}`;
@@ -199,7 +200,7 @@ async function snapshot(fetcher = fetch, cache = globalThis.caches?.default) {
   const now = Date.now();
   if (hotSnapshot && hotSnapshot.until > now) return hotSnapshot.value;
   if (!refreshPromise) refreshPromise = (async () => {
-    const cacheKey = new Request(`${site_config_default.url}/__nightwatch_repository_snapshot_v2`);
+    const cacheKey = new Request(`${site_config_default.url}/__nightwatch_repository_snapshot_v4`);
     if (cache) {
       const cached = await cache.match(cacheKey);
       if (cached) {
@@ -240,21 +241,24 @@ function socialLinks() {
   return `<div class="social-links" role="group" aria-label="Sohrab's profiles"><a class="social-link" href="${escape3(site_config_default.x.url)}" target="_blank" rel="noopener noreferrer" aria-label="Sohrab Kaghazian on X, ${escape3(site_config_default.x.handle)}"><span class="social-mark social-mark-x" aria-hidden="true"><img src="/social/x.svg" alt="" width="24" height="24"></span><span class="social-copy"><span class="social-label">Find me on X</span><strong class="social-handle">${escape3(site_config_default.x.handle)}</strong></span><span class="social-arrow" aria-hidden="true">\u2197</span></a><a class="social-link social-link-github" href="${escape3(site_config_default.github_profile.url)}" target="_blank" rel="noopener noreferrer" aria-label="Sohrab Kaghazian on GitHub, ${escape3(site_config_default.github_profile.handle)}"><span class="social-mark social-mark-github" aria-hidden="true"><img src="/social/github.svg" alt="" width="24" height="24"></span><span class="social-copy"><span class="social-label">Explore on GitHub</span><strong class="social-handle">${escape3(site_config_default.github_profile.handle)}</strong></span><span class="social-arrow" aria-hidden="true">\u2197</span></a></div>`;
 }
 __name(socialLinks, "socialLinks");
-function homepage(posts, showRepository) {
+function homepage() {
+  return page(site_config_default.author, site_config_default.description, "/", `<main id="main" class="home-hub"><div class="wrap"><p class="home-eyebrow">${escape3(site_config_default.author)} / Nightwatch</p><h1>Security research.<br><span>Notes along the way.</span></h1><p class="home-intro">Findings, experiments, and lessons from application security.</p><nav class="home-destinations" aria-label="Explore Nightwatch"><a id="writeups" class="home-destination" href="/writeups/">Writeups <span aria-hidden="true">↗</span></a><a class="home-destination" href="/notes/">Notes <span aria-hidden="true">↗</span></a></nav><div class="home-profile-links"><a href="${escape3(site_config_default.github_profile.url)}" rel="noopener noreferrer">GitHub ↗</a><a href="${escape3(site_config_default.x.url)}" rel="noopener noreferrer">X ↗</a></div></div></main>`);
+}
+function writeupsPage(posts, showRepository) {
   const list2 = posts.length ? `<div class="post-list">${posts.map(card).join("")}</div>` : '<div class="empty"><span class="empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg></span><h3>No writeups yet</h3><p>Published research and technical notes will appear here.</p></div>';
   const search = posts.length ? `<div class="writeup-tools" data-writeup-search hidden><label class="sr-only" for="writeup-search">Search writeups</label><div class="search-field"><svg viewBox="0 0 24 24" width="21" height="21" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 5 5"/></svg><input id="writeup-search" type="search" data-search-input maxlength="120" autocomplete="off" spellcheck="false" placeholder="Search writeups, tags, or topics\u2026" aria-controls="writeup-results"><button type="button" class="search-clear" data-search-clear hidden>Clear</button></div><p class="search-count" data-search-count role="status" aria-live="polite" aria-atomic="true" hidden></p></div><div class="search-empty" data-search-empty hidden><strong>No matching writeups.</strong><span>Try another word or tag.</span><button type="button" data-search-reset>Show all writeups</button></div>` : "";
-  return page(site_config_default.author, site_config_default.description, "/", `<main id="main"><div class="wrap"><section class="hero"><div class="author"><div><span class="author-label">Written by</span><span class="author-name">${escape3(site_config_default.author)}</span></div></div><h1>Security <span>writeups.</span></h1><p class="intro">Findings, experiments, and the lessons behind them.</p>${socialLinks()}</section><section class="archive" id="writeups" aria-labelledby="writeups-title"><div class="section-heading"><h2 id="writeups-title">Writeups</h2></div>${search}<div id="writeup-results">${list2}</div></section></div></main>`, site_config_default.author, showRepository);
+  return page("Writeups", site_config_default.description, "/writeups/", `<main id="main"><div class="wrap"><header class="writeups-hero"><h1>Writeups.</h1><p class="intro">Security research, findings, and the lessons behind them.</p></header><section class="archive" id="writeups" aria-label="Published writeups">${search}<div id="writeup-results">${list2}</div></section></div></main>`, site_config_default.author, showRepository);
 }
 __name(homepage, "homepage");
 function article(post) {
   const byline = [`<span>By ${escape3(post.author)}</span>`, ...post.date ? [`<time datetime="${escape3(post.date)}">${prettyDate(post.date)}</time>`] : []].join('<span class="separator" aria-hidden="true">\xB7</span>');
   const contents = post.toc.length ? `<aside class="contents"><details open><summary>On this page</summary><nav aria-label="Table of contents"><ol>${post.toc.map((h) => `<li><a class="depth-${h.depth}" href="#${encodeURIComponent(h.id)}">${escape3(h.text)}</a></li>`).join("")}</ol></nav></details></aside>` : "";
   const layoutClass = post.layout === "document" ? " document-reading" : post.toc.length ? "" : " no-contents";
-  return page(post.title, post.description, postHref(post), `<main id="main"><div class="wrap"><header class="article-hero"><a class="back-link" href="/#writeups">\u2190 All writeups</a><h1>${escape3(post.title)}</h1>${post.description ? `<p class="article-deck">${escape3(post.description)}</p>` : ""}<div class="article-byline">${byline}</div>${tags(post, "post-tags article-tags")}</header><div class="reading-layout${layoutClass}">${post.layout === "document" ? "" : contents}<article class="prose">${post.html}<div class="article-end"><a href="/#writeups">\u2190 All writeups</a><a href="#top">Back to top \u2191</a></div></article></div></div></main>`, post.author, true);
+  return page(post.title, post.description, postHref(post), `<main id="main"><div class="wrap"><header class="article-hero"><a class="back-link" href="/writeups/">\u2190 All writeups</a><h1>${escape3(post.title)}</h1>${post.description ? `<p class="article-deck">${escape3(post.description)}</p>` : ""}<div class="article-byline">${byline}</div>${tags(post, "post-tags article-tags")}</header><div class="reading-layout${layoutClass}">${post.layout === "document" ? "" : contents}<article class="prose">${post.html}<div class="article-end"><a href="/writeups/">\u2190 All writeups</a><a href="#top">Back to top \u2191</a></div></article></div></div></main>`, post.author, true);
 }
 __name(article, "article");
 function notFound() {
-  return page("Page not found", "This page could not be found.", "/404", '<main class="wrap not-found" id="main"><p class="eyebrow">404</p><h1>Page not found.</h1><p>This writeup may have moved or is no longer available.</p><a class="button-link" href="/">Back to writeups <span aria-hidden="true">\u2192</span></a></main>');
+  return page("Page not found", "This page could not be found.", "/404", '<main class="wrap not-found" id="main"><p class="eyebrow">404</p><h1>Page not found.</h1><p>This writeup may have moved or is no longer available.</p><a class="button-link" href="/writeups/">Back to writeups <span aria-hidden="true">\u2192</span></a></main>');
 }
 __name(notFound, "notFound");
 function htmlResponse(html, status = 200) {
@@ -266,23 +270,29 @@ var index_default = {
     const url = new URL(request.url);
     if (!["GET", "HEAD"].includes(request.method)) return new Response("Method not allowed", { status: 405, headers: { Allow: "GET, HEAD" } });
     if (url.pathname === "/index.html") return Response.redirect(`${site_config_default.url}/`, 308);
+    if (url.pathname === "/") return new Response(request.method === "HEAD" ? null : homepage(), { headers: { ...HEADERS, "Cache-Control": "public, max-age=60" } });
+    if (url.pathname === "/llm-visuals.css" || url.pathname === "/llm-visuals.js") {
+      const css = url.pathname.endsWith('.css');
+      return new Response(request.method === "HEAD" ? null : css ? llmVisualsCss : llmVisualsJs, { headers: { ...HEADERS, "Content-Type": css ? "text/css; charset=utf-8" : "text/javascript; charset=utf-8", "Cache-Control": "public, max-age=3600" } });
+    }
     if (url.pathname === "/notes.css") return new Response(request.method === "HEAD" ? null : notesCss, { headers: { ...HEADERS, "Content-Type": "text/css; charset=utf-8", "Cache-Control": "public, max-age=3600" } });
     if (url.pathname === "/notes/llm.svg") return new Response(request.method === "HEAD" ? null : llmIcon, { headers: { ...HEADERS, "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=86400" } });
     const notesIndexMatch = /^\/notes\/?$/.test(url.pathname);
+    const writeupsIndexMatch = /^\/writeups\/?$/.test(url.pathname);
     const noteMatch = url.pathname.match(/^\/notes\/([^/]+)(?:\/([^/]+))?\/?$/);
-    if ((notesIndexMatch || noteMatch) && !url.pathname.endsWith("/")) {
+    if ((notesIndexMatch || noteMatch || writeupsIndexMatch) && !url.pathname.endsWith("/")) {
       url.pathname += "/";
       return Response.redirect(url.href, 308);
     }
     const articleMatch = url.pathname.match(/^\/writeups\/([^/]+)\/?$/);
-    if (url.pathname !== "/" && url.pathname !== "/sitemap.xml" && !articleMatch && !notesIndexMatch && !noteMatch) return env.ASSETS.fetch(request);
+    if (url.pathname !== "/sitemap.xml" && !articleMatch && !writeupsIndexMatch && !notesIndexMatch && !noteMatch) return env.ASSETS.fetch(request);
     try {
       const { posts, notes = [], status } = await snapshot(env.FETCH || fetch, env.CACHE);
       const respond = (html, code = 200) => {
         const response = htmlResponse(html, code);
         return request.method === "HEAD" ? new Response(null, { status: response.status, headers: response.headers }) : response;
       };
-      if (url.pathname === "/") return respond(homepage(posts, status === "ready"));
+      if (writeupsIndexMatch) return respond(writeupsPage(posts, status === "ready"));
       if (notesIndexMatch) return respond(notesIndex(notes, page));
       if (noteMatch) {
         const section = noteSections(notes).find((item) => encodeURIComponent(item.slug) === noteMatch[1]);
@@ -292,7 +302,7 @@ var index_default = {
         return note ? respond(noteArticle(note, page, tags)) : respond(notFound(), 404);
       }
       if (url.pathname === "/sitemap.xml") {
-        const collections = ["/notes/", ...noteSections(notes).map((section) => `/notes/${encodeURIComponent(section.slug)}/`)];
+        const collections = ["/writeups/", "/notes/", ...noteSections(notes).map((section) => `/notes/${encodeURIComponent(section.slug)}/`)];
         const xml = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${escape3(site_config_default.url)}/</loc></url>${collections.map((route) => `<url><loc>${escape3(site_config_default.url + route)}</loc></url>`).join("")}${[...posts, ...notes].map((post2) => `<url><loc>${escape3(site_config_default.url + postHref(post2))}</loc>${post2.date ? `<lastmod>${post2.date}</lastmod>` : ""}</url>`).join("")}</urlset>`;
         return new Response(request.method === "HEAD" ? null : xml, { headers: { ...HEADERS, "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "public, max-age=60" } });
       }
