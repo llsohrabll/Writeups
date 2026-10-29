@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none" role="img" aria-label="LLM Attacks">
+  <rect x=".5" y=".5" width="63" height="63" rx="15.5" fill="#EAF0FF" stroke="#D5E1FC"/>
+  <g stroke="#3156C8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="18" y="18" width="28" height="28" rx="8"/>
+    <path d="M26 13v5m12-5v5M26 46v5m12-5v5M13 26h5m-5 12h5m28-12h5m-5 12h5"/>
+    <path d="M26 25h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-5 4v-4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2Z"/>
+    <path d="M29 30h6m-6 3h3"/>
+  </g>
+</svg>

@@ -1,1 +1,3 @@
 - Website: https://nightwatch.team
+- Notes: https://nightwatch.team/notes/
+- [How to add learning notes](notes/README.md)
