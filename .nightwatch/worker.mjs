@@ -200,7 +200,7 @@ async function snapshot(fetcher = fetch, cache = globalThis.caches?.default) {
   const now = Date.now();
   if (hotSnapshot && hotSnapshot.until > now) return hotSnapshot.value;
   if (!refreshPromise) refreshPromise = (async () => {
-    const cacheKey = new Request(`${site_config_default.url}/__nightwatch_repository_snapshot_v5`);
+    const cacheKey = new Request(`${site_config_default.url}/__nightwatch_repository_snapshot_v6`);
     if (cache) {
       const cached = await cache.match(cacheKey);
       if (cached) {

@@ -35,7 +35,8 @@ function addNoteUrl(section) {
 
 function noteCard(note) {
   const metadata = [note.date, `${note.minutes} min read`].filter(Boolean).map(escapeHtml).join(' <span aria-hidden="true">·</span> ');
-  return `<a class="note-card" href="${noteHref(note)}"><div class="note-card-meta">${metadata}</div><h3>${escapeHtml(note.title)}</h3>${note.description ? `<p>${escapeHtml(note.description)}</p>` : ''}<span class="note-card-link">Read note <span aria-hidden="true">→</span></span></a>`;
+  const icon = note.iconUrl ? `<span class="note-card-icon"><img src="${escapeHtml(note.iconUrl)}" width="56" height="56" alt="" loading="lazy" decoding="async"></span>` : '';
+  return `<a class="note-card${icon ? ' note-card-with-icon' : ''}" href="${noteHref(note)}">${icon}<div class="note-card-copy"><div class="note-card-meta">${metadata}</div><h3>${escapeHtml(note.title)}</h3>${note.description ? `<p>${escapeHtml(note.description)}</p>` : ''}<span class="note-card-link">Read note <span aria-hidden="true">→</span></span></div></a>`;
 }
 
 export function notesIndex(notes, page) {
@@ -53,11 +54,12 @@ export function notesTopic(section, page) {
 
 export function noteArticle(note, page, tags) {
   const section = topicTitle(note.section);
+  const heading = note.iconUrl ? `<div class="note-title-row"><img class="note-title-icon" src="${escapeHtml(note.iconUrl)}" width="56" height="56" alt="" decoding="async"><h1>${escapeHtml(note.title)}</h1></div>` : `<h1>${escapeHtml(note.title)}</h1>`;
   const back = `<a class="notes-back" href="${topicHref(note.section)}">← ${escapeHtml(section)}</a>`;
   const editUrl = `${repository}/edit/main/${note.file.split('/').map(encodeURIComponent).join('/')}`;
   const metadata = [`<span>By ${escapeHtml(note.author)}</span>`, note.date ? `<time datetime="${escapeHtml(note.date)}">${escapeHtml(note.date)}</time>` : '', `<span>${note.minutes} min read</span>`].filter(Boolean).join('<span class="separator" aria-hidden="true">·</span>');
   const contents = note.toc.length ? `<aside class="contents"><details open><summary>On this page</summary><nav aria-label="Table of contents"><ol>${note.toc.map((heading) => `<li><a class="depth-${heading.depth}" href="#${encodeURIComponent(heading.id)}">${escapeHtml(heading.text)}</a></li>`).join('')}</ol></nav></details></aside>` : '';
-  return page(note.title, note.description, noteHref(note), `<main id="main" class="notes-page"><div class="wrap"><header class="article-hero">${back}<p class="notes-eyebrow">${escapeHtml(section)} / Note</p><h1>${escapeHtml(note.title)}</h1>${note.description ? `<p class="article-deck">${escapeHtml(note.description)}</p>` : ''}<div class="article-byline">${metadata}</div>${tags(note, 'post-tags article-tags')}<a class="notes-edit-link" href="${escapeHtml(editUrl)}">Edit note on GitHub ↗</a></header><div class="reading-layout${note.layout === 'document' ? ' document-reading' : note.toc.length ? '' : ' no-contents'}">${note.layout === 'document' ? '' : contents}<article class="prose">${note.html}<div class="article-end">${back}<a href="#top">Back to top ↑</a></div></article></div></div></main>`, note.author, true);
+  return page(note.title, note.description, noteHref(note), `<main id="main" class="notes-page"><div class="wrap"><header class="article-hero">${back}<p class="notes-eyebrow">${escapeHtml(section)} / Note</p>${heading}${note.description ? `<p class="article-deck">${escapeHtml(note.description)}</p>` : ''}<div class="article-byline">${metadata}</div>${tags(note, 'post-tags article-tags')}<a class="notes-edit-link" href="${escapeHtml(editUrl)}">Edit note on GitHub ↗</a></header><div class="reading-layout${note.layout === 'document' ? ' document-reading' : note.toc.length ? '' : ' no-contents'}">${note.layout === 'document' ? '' : contents}<article class="prose">${note.html}<div class="article-end">${back}<a href="#top">Back to top ↑</a></div></article></div></div></main>`, note.author, true);
 }
 
 export const notesCss = `
@@ -103,6 +105,8 @@ export const notesCss = `
 .notes-list{display:grid;gap:14px}
 .note-card{display:block;text-decoration:none;color:inherit;border:1px solid #8394b12b;border-radius:12px;padding:26px 28px}
 .note-card:hover{border-color:#6388ef88}
+.note-card-with-icon{display:flex;gap:22px;align-items:flex-start}.note-card-icon{display:block;flex:0 0 56px;width:56px;height:56px;margin-top:4px}.note-card-icon img{display:block;width:100%;height:100%}.note-card-copy{min-width:0}
+.note-title-row{display:flex;align-items:center;gap:18px;margin-bottom:20px}.note-title-row h1{margin:0}.note-title-icon{display:block;width:56px;height:56px;flex:0 0 56px}
 .note-card-meta{display:flex;gap:10px;font-size:11px;opacity:.5}
 .note-card h3{font-size:21px;letter-spacing:-.025em;margin:12px 0}
 .note-card p{font-size:14px;line-height:1.7;color:var(--muted);margin:0 0 16px}

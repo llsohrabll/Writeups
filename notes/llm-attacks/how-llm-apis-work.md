@@ -3,6 +3,7 @@ title: "How LLM APIs work"
 description: "A visual guide to tool calls, prompt injection, and the backend checks that stop unauthorized actions."
 date: "2026-10-29"
 tags: [llm, prompt-injection, api-security]
+icon: "icons/llm-api.svg"
 layout: document
 ---
 
