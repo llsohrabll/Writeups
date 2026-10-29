@@ -130,14 +130,15 @@ test('sitemap includes collections, published notes and existing writeups', asyn
   for (const path of ['/notes/', '/notes/llm-attacks/', '/notes/llm-attacks/injection/', '/writeups/existing/']) assert.ok(xml.includes(`https://nightwatch.team${path}`));
 });
 
-test('original homepage retains writeups and social links with compact archive buttons', async () => {
+test('homepage offers two section buttons without a writeups list or search', async () => {
   const request = await freshWorker({ 'posts/existing.md': writeup, 'notes/llm-attacks/injection.md': note });
   const home = await (await request('/')).text();
-  assert.match(home, /class="archive-switch-current" href="\/writeups\/"/);
+  assert.match(home, /class="home-section-button" href="\/writeups\/"/);
+  assert.match(home, /class="home-section-button" href="\/notes\/"/);
   assert.match(home, /aria-label="Explore Nightwatch"/);
-  assert.match(home, /class="social-links"/);
-  assert.match(home, /href="\/writeups\/existing\/"/);
-  assert.match(home, /src="\/search.js"/);
+  assert.doesNotMatch(home, /class="post-card"|class="social-links"|data-writeup-search/);
+  assert.doesNotMatch(home, /href="\/writeups\/existing\/"/);
+  assert.doesNotMatch(home, /src="\/search.js"/);
   assert.doesNotMatch(home, /home-hub/);
   assert.doesNotMatch(home, /Prompt injection notes/);
   assert.match(home, /href="\/notes\/"/);

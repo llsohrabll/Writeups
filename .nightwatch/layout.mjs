@@ -20,12 +20,12 @@ export function page(title, description, route, body, author = site.author, show
 <link rel="canonical" href="${canonical}"><meta property="og:type" content="${article ? 'article' : 'website'}">
 <meta property="og:title" content="${escapeHtml(title)}"><meta property="og:description" content="${escapeHtml(description)}"><meta property="og:url" content="${canonical}">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"><script src="/theme.js"></script>
-${route === '/' || route === '/writeups/' ? '<script type="module" src="/search.js"></script>' : ''}
+${route === '/writeups/' ? '<script type="module" src="/search.js"></script>' : ''}
 <link rel="stylesheet" href="/site.css"><link rel="stylesheet" href="/notes.css?v=${notesCssVersion}">
 ${visuals ? `<link rel="stylesheet" href="/llm-visuals.css?v=${visualVersion}"><script defer src="/llm-visuals.js?v=${visualVersion}"></script>` : ''}
 </head><body id="top"><a class="skip" href="#main">Skip to content</a>
 <header class="site-header"><div class="wrap header-inner"><a class="brand" href="/" aria-label="Nightwatch home"><img class="brand-mark" src="/favicon.svg" alt="" width="32" height="32">Nightwatch</a>
-<nav class="nav" aria-label="Main navigation">${navLink('/writeups/', 'Writeups', route === '/' || route.startsWith('/writeups/'))}${navLink('/notes/', 'Notes', notes)}
+<nav class="nav" aria-label="Main navigation">${navLink('/writeups/', 'Writeups', route.startsWith('/writeups/'))}${navLink('/notes/', 'Notes', notes)}
 ${showRepository ? `<a class="source-link" href="${escapeHtml(site.repository)}" rel="noopener noreferrer">Source ↗</a>` : ''}
 <button class="theme-toggle" type="button" data-theme-toggle hidden aria-label="Switch to light mode" title="Switch to light mode"><span class="theme-toggle-icon" aria-hidden="true">☀</span><span class="theme-toggle-label">Light mode</span></button>
 </nav></div></header>${body}

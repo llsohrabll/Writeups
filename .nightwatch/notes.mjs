@@ -63,9 +63,10 @@ export function noteArticle(note, page, tags) {
 }
 
 export const notesCss = `
-.archive-switch{display:flex;gap:10px;flex-wrap:wrap;margin:24px 0 0;font-family:var(--sans)}
-.archive-switch a{display:inline-flex;align-items:center;gap:24px;padding:9px 15px;border:1px solid var(--line);border-radius:8px;text-decoration:none;font-size:14px;background:var(--white)}
-.archive-switch a:hover{border-color:var(--accent)}.archive-switch .archive-switch-current{background:var(--nav-current-bg);color:var(--nav-current-ink)}
+.home-sections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;max-width:520px;margin-top:30px;font-family:var(--sans)}
+.home-section-button{display:flex;align-items:center;justify-content:space-between;gap:28px;padding:20px 23px;border:1px solid var(--line);border-radius:12px;text-decoration:none;font-size:17px;font-weight:600;background:var(--white);box-shadow:0 5px 19px var(--card-shadow);transition:border-color .15s,background .15s}
+.home-section-button>span:last-child{color:var(--accent);font-size:20px;font-weight:400}.home-section-button:hover{border-color:var(--accent);background:var(--surface-hover)}
+@media(max-width:420px){.home-sections{grid-template-columns:1fr}.home-section-button{padding:18px 20px}}
 .writeups-hero{padding-block:54px 20px}.writeups-hero h1{font-size:clamp(38px,6vw,60px);letter-spacing:-.05em;margin:0 0 14px}.writeups-hero .intro{color:var(--muted);margin:0}
 @media(max-width:600px){.writeups-hero{padding-top:38px}}
 .notes-page{padding-bottom:80px}
@@ -80,7 +81,7 @@ export const notesCss = `
 .notes-section-heading h2{font-size:17px;font-weight:600;margin:0;letter-spacing:-.02em}
 .notes-section-heading>span{font-size:12px;opacity:.5}
 .notes-topic-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
-.notes-topic-card{display:flex;gap:24px;padding:30px;border:1px solid var(--line);border-radius:16px;color:inherit;text-decoration:none;background:var(--white);transition:border-color .15s,background .15s}
+.notes-topic-card{display:flex;align-items:center;gap:24px;padding:30px;border:1px solid var(--line);border-radius:16px;color:inherit;text-decoration:none;background:var(--white);transition:border-color .15s,background .15s}
 .notes-topic-card:hover{border-color:#6388ef99;background:#6388ef0c}
 .notes-topic-icon{flex-shrink:0;display:block;width:64px;height:64px}
 .notes-topic-icon svg{display:block;width:100%;height:100%}
@@ -90,8 +91,8 @@ export const notesCss = `
 .note-card-link{font-size:12px;font-weight:600;display:inline-flex;gap:12px;align-items:center;color:var(--accent)}
 .notes-back,.notes-add-link,.notes-edit-link{font-size:13px;text-decoration:none;color:inherit}
 .notes-back{display:inline-flex;margin-top:36px;opacity:.65}
-.notes-topic-hero{display:flex;gap:28px;align-items:flex-start;max-width:950px;padding:42px 0 48px}
-.notes-topic-hero .notes-topic-icon{margin-top:6px}
+.notes-topic-hero{display:flex;gap:28px;align-items:center;max-width:950px;padding:42px 0 48px}
+.notes-topic-hero .notes-topic-icon{margin-top:0}
 .notes-topic-hero h1{font-size:clamp(34px,6vw,56px);margin-bottom:18px}
 .notes-add-link,.notes-edit-link{color:var(--accent)}
 .notes-edit-link{display:inline-block;margin-top:20px}
@@ -105,7 +106,7 @@ export const notesCss = `
 .notes-list{display:grid;gap:14px}
 .note-card{display:block;text-decoration:none;color:inherit;border:1px solid #8394b12b;border-radius:12px;padding:26px 28px}
 .note-card:hover{border-color:#6388ef88}
-.note-card-with-icon{display:flex;gap:22px;align-items:flex-start}.note-card-icon{display:block;flex:0 0 56px;width:56px;height:56px;margin-top:4px}.note-card-icon img{display:block;width:100%;height:100%}.note-card-copy{min-width:0}
+.note-card-with-icon{display:flex;gap:22px;align-items:center}.note-card-icon{display:block;flex:0 0 56px;width:56px;height:56px;margin:0}.note-card-icon img{display:block;width:100%;height:100%}.note-card-copy{min-width:0}
 .note-title-row{display:flex;align-items:center;gap:18px;margin-bottom:20px}.note-title-row h1{margin:0}.note-title-icon{display:block;width:56px;height:56px;flex:0 0 56px}
 .note-card-meta{display:flex;gap:10px;font-size:11px;opacity:.5}
 .note-card h3{font-size:21px;letter-spacing:-.025em;margin:12px 0}
