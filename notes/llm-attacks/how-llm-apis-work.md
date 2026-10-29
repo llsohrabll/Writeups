@@ -19,14 +19,21 @@ In a typical application-mediated tool-calling system, the model produces a stru
 | Application / backend | Authenticates, validates, authorizes, and executes | It must not treat the model’s approval claim as user approval. |
 | Tool / API | Reads data or performs an operation | A successful response does not make all returned text trustworthy. |
 
-## Explore the seven-step flow
+## 1. Interactive seven-step workflow
 
-Select a step, then switch between **Normal flow** and **Prompt injection**. The normal example asks for a review summary emailed to the customer. The attack changes a customer-written review into a fake instruction.
+Select a step, then switch between **Normal flow** and **Prompt injection**. The normal example follows an order-status notification. The attack inserts a fake instruction into returned API data.
 
 ```llm-flow
 ```
 
 At step 3, **the backend validates arguments and permissions, not the LLM**. Step 6 is also application-mediated: the model proposes the second tool call; the application performs the external request after its checks pass.
+
+## 2. Sequence diagram — who communicates with whom?
+
+The lanes show the direction of each request and response. The red band marks untrusted function data entering the model’s context. Switch between **Authorized** and **Blocked** to see the application’s decision before any external API action.
+
+```llm-sequence
+```
 
 ## Steps 4–7, without the confusing shortcuts
 

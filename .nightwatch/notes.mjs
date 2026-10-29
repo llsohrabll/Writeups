@@ -61,15 +61,11 @@ export function noteArticle(note, page, tags) {
 }
 
 export const notesCss = `
-.home-hub{display:flex;align-items:center;padding-block:80px 100px;min-height:calc(100vh - 210px)}
-.home-hub .wrap{max-width:920px}.home-hub .home-eyebrow{font-size:13px;color:var(--muted);margin:0 0 24px}
-.home-hub h1{font-size:clamp(40px,6vw,66px);font-weight:650;line-height:1.13;letter-spacing:-.055em;max-width:740px;margin:0 0 24px}.home-hub h1 span{color:var(--accent)}
-.home-intro{font-size:18px;line-height:1.7;color:var(--muted);max-width:580px;margin:0 0 36px}
-.home-destinations{display:flex;flex-wrap:wrap;gap:12px}.home-destination{display:inline-flex;align-items:center;gap:36px;min-width:178px;padding:14px 20px;border:1px solid var(--line);border-radius:9px;text-decoration:none;background:var(--white);font-size:15px;font-weight:600;justify-content:space-between}
-.home-destination:first-child{border-color:var(--accent);background:var(--nav-current-bg);color:var(--nav-current-ink)}.home-destination:hover{border-color:var(--accent)}
-.home-profile-links{display:flex;gap:20px;margin-top:36px;font-size:13px;color:var(--muted)}.home-profile-links a{text-decoration:none}
+.archive-switch{display:flex;gap:10px;flex-wrap:wrap;margin:24px 0 0;font-family:var(--sans)}
+.archive-switch a{display:inline-flex;align-items:center;gap:24px;padding:9px 15px;border:1px solid var(--line);border-radius:8px;text-decoration:none;font-size:14px;background:var(--white)}
+.archive-switch a:hover{border-color:var(--accent)}.archive-switch .archive-switch-current{background:var(--nav-current-bg);color:var(--nav-current-ink)}
 .writeups-hero{padding-block:54px 20px}.writeups-hero h1{font-size:clamp(38px,6vw,60px);letter-spacing:-.05em;margin:0 0 14px}.writeups-hero .intro{color:var(--muted);margin:0}
-@media(max-width:600px){.home-hub{padding-block:52px 64px;min-height:0}.home-hub h1{font-size:40px}.home-intro{font-size:16px}.home-destinations{flex-direction:column}.home-destination{width:100%}.writeups-hero{padding-top:38px}}
+@media(max-width:600px){.writeups-hero{padding-top:38px}}
 .notes-page{padding-bottom:80px}
 .notes-page .wrap{max-width:1120px}
 .notes-hero{padding:76px 0 54px;max-width:780px}

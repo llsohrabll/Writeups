@@ -1,6 +1,7 @@
 import lib_default from 'markdown-it';
 import { parseDocument } from 'yaml';
 import { renderLlmFlow, renderLlmCheckpoint } from './llm-visuals.mjs';
+import { renderLlmSequence } from './llm-sequence.mjs';
 const __name = (value) => value;
 var escape3 = /* @__PURE__ */ __name((value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]), "escape");
 function slugify(value) {
@@ -43,6 +44,7 @@ function renderPost(post, resolveLocal2) {
     const name = tokens[index].info.trim();
     if (name === 'llm-flow') return renderLlmFlow();
     if (name === 'llm-checkpoint') return renderLlmCheckpoint();
+    if (name === 'llm-sequence') return renderLlmSequence();
     return defaultFence(tokens, index, options, env, renderer);
   };
   const toc = [];

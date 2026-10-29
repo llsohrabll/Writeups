@@ -15,8 +15,8 @@ The Worker reads public Markdown from `llsohrabll/Writeups` at runtime. It needs
 
 `notes.mjs` implements the notes collection pages, icon, and additional CSS. `worker.mjs` imports notes and writeups in one shared snapshot so relative links can resolve across both. `.nightwatch/`, README files, and hidden files are excluded from content import.
 
-The homepage links to the separate `/writeups/` and `/notes/` archives. The writeups archive retains the existing search behavior.
+The homepage retains the original hero, social links, search, and writeups list, with compact buttons for `/writeups/` and `/notes/`. The dedicated writeups archive retains the same search behavior.
 
-`llm-visuals.mjs` provides the interactive seven-step walkthrough and a local authorization simulator. Markdown fences named `llm-flow` and `llm-checkpoint` insert these registered components. Other raw HTML remains escaped. Component scripts and styles are served from the same origin, with content-versioned asset URLs and the existing Content Security Policy.
+`original-flow.mjs` preserves the seven-step component’s HTML, colors, and UI with its script and style externalized. `llm-sequence.mjs` renders the five-lane sequence diagram with selectable messages and Authorized/Blocked outcomes. `llm-visuals.mjs` combines these assets and the local authorization simulator. Markdown fences named `llm-flow`, `llm-sequence`, and `llm-checkpoint` insert the registered components. Other raw HTML remains escaped. Scripts and styles are served from the same origin, with content-versioned URLs and the existing Content Security Policy.
 
 For local visual QA, `pnpm preview` uses local Markdown and the saved production theme in the task workspace. It does not publish content. Changes to notes on GitHub appear automatically after the import cache expires (about 10 minutes); Worker source changes require a build and deployment.

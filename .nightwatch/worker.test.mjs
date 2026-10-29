@@ -130,12 +130,15 @@ test('sitemap includes collections, published notes and existing writeups', asyn
   for (const path of ['/notes/', '/notes/llm-attacks/', '/notes/llm-attacks/injection/', '/writeups/existing/']) assert.ok(xml.includes(`https://nightwatch.team${path}`));
 });
 
-test('minimal homepage offers Writeups and Notes without mixing their content', async () => {
+test('original homepage retains writeups and social links with compact archive buttons', async () => {
   const request = await freshWorker({ 'posts/existing.md': writeup, 'notes/llm-attacks/injection.md': note });
   const home = await (await request('/')).text();
-  assert.match(home, /class="home-destination" href="\/writeups\/"/);
-  assert.match(home, /class="home-destination" href="\/notes\/"/);
-  assert.doesNotMatch(home, /data-search="/);
+  assert.match(home, /class="archive-switch-current" href="\/writeups\/"/);
+  assert.match(home, /aria-label="Explore Nightwatch"/);
+  assert.match(home, /class="social-links"/);
+  assert.match(home, /href="\/writeups\/existing\/"/);
+  assert.match(home, /src="\/search.js"/);
+  assert.doesNotMatch(home, /home-hub/);
   assert.doesNotMatch(home, /Prompt injection notes/);
   assert.match(home, /href="\/notes\/"/);
   assert.equal((await request('/writeups/existing/')).status, 200);
@@ -154,14 +157,33 @@ test('dedicated writeups archive retains search and excludes learning notes', as
 });
 
 test('registered visualization fences render interactive HTML without enabling raw HTML', async () => {
-  const request = await freshWorker({ 'notes/llm-attacks/flow.md': note + '\n\n```llm-flow\n```\n\n```llm-checkpoint\n```\n\n<script>alert(1)</script>' });
+  const request = await freshWorker({ 'notes/llm-attacks/flow.md': note + '\n\n```llm-flow\n```\n\n```llm-checkpoint\n```\n\n```llm-sequence\n```\n\n<script>alert(1)</script>' });
   const html = await (await request('/notes/llm-attacks/flow/')).text();
   assert.match(html, /data-llm-flow/);
   assert.match(html, /data-llm-checkpoint/);
+  assert.match(html, /data-llm-sequence/);
+  assert.match(html, /id="portswigger-flow"/);
+  assert.match(html, /Who communicates with whom/);
   assert.match(html, /src="\/llm-visuals.js\?v=/);
   assert.match(html, /href="\/llm-visuals.css\?v=/);
   assert.doesNotMatch(html, /<script>alert/);
   assert.match((await request('/llm-visuals.js')).headers.get('Content-Type'), /text\/javascript/);
+});
+
+test('original flow palette and interactive sequence assets are preserved', async () => {
+  const { llmVisualsCss, llmVisualsJs } = await import('./llm-visuals.mjs');
+  for (const color of ['#75b8ff', '#55d9bf', '#c3a3ff', '#ffc17d', '#ff9e9b']) assert.ok(llmVisualsCss.includes(color));
+  assert.match(llmVisualsJs, /ps-mode-attack/);
+  assert.match(llmVisualsJs, /data-seq-mode/);
+  const { Script } = await import('node:vm');
+  assert.doesNotThrow(() => new Script(llmVisualsJs));
+});
+
+test('published learning note contains no shared conversation attribution or links', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const source = await readFile(new URL('../notes/llm-attacks/how-llm-apis-work.md', import.meta.url), 'utf8');
+  assert.doesNotMatch(source, /chatgpt\.com\/share|Study notes adapted|original study conversation/i);
+  assert.match(source, /Sequence diagram — who communicates with whom/);
 });
 
 test('illustrated policy denies forged authority and gates exact-action approval', async () => {
