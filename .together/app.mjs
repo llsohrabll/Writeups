@@ -125,7 +125,7 @@ export class TogetherRoom {
         await this.storage.delete(key);
         return json({ ok: true });
       }
-      if (url.pathname === '/items' && request.method === 'GET') {
+      if ((url.pathname === '/items' && request.method === 'GET') || (url.pathname === '/items/list' && request.method === 'POST')) {
         const entries = await this.storage.list({ prefix: 'plan:', limit: 1000 });
         return json({ items: [...entries.values()].filter(item => !item.deletedAt) });
       }
@@ -208,7 +208,7 @@ export function createWorker({ page, css, js, illustration }) {
         const authorized = await authenticated(request, env.SESSION_SECRET);
         if (url.pathname.startsWith('/api/')) {
           if (!authorized) return json({ error: 'Unlock your space to continue.' }, 401);
-          if (!/^\/api\/items(?:\/[\da-f-]{36}(?:\/restore)?)?$/.test(url.pathname)) return json({ error: 'Not found.' }, 404);
+          if (!/^\/api\/items(?:\/list|\/[\da-f-]{36}(?:\/restore)?)?$/.test(url.pathname)) return json({ error: 'Not found.' }, 404);
           if (!['GET', 'POST', 'PATCH', 'DELETE'].includes(request.method)) return json({ error: 'Method not allowed.' }, 405);
           return room().fetch(new Request('https://room' + url.pathname.slice(4), request));
         }

@@ -74,7 +74,7 @@ if (document.body.dataset.authenticated === 'true') {
   async function refresh() {
     if (loading) return loading;
     loading = (async () => {
-      try { const value = await api('/api/items'); items = value.items; boardError.textContent = ''; render(); }
+      try { const value = await api('/api/items/list', 'POST', {}); items = value.items; boardError.textContent = ''; render(); }
       catch (error) { boardError.textContent = error.message; if (!items.length) board.innerHTML = '<div class="empty-message"><p>We couldn’t gather your plans.</p><button class="text-button" data-retry>Try again</button></div>'; }
       finally { loading = null; }
     })();

@@ -28,9 +28,11 @@ test('private data and board are inaccessible without a valid signed session', a
   const f = await fixture();
   assert.match(await (await f.request('/')).text(), /id="login-form"/);
   assert.equal((await f.request('/api/items')).status, 401);
+  assert.equal((await f.request('/api/items/list', 'POST', {})).status, 401);
   const login = await f.unlock();
   assert.match(login.headers.get('Set-Cookie'), /Secure; HttpOnly; SameSite=Strict/);
   assert.match(await (await f.request('/')).text(), /id="plan-form"/);
+  assert.deepEqual(await (await f.request('/api/items/list', 'POST', {})).json(), { items: [] });
   const parts = f.getCookie().split('.');
   parts[0] = parts[0].replace(/\d+$/, '9999999999');
   assert.equal((await f.request('/api/items', 'GET', undefined, { cookie: parts.join('.') })).status, 401);
