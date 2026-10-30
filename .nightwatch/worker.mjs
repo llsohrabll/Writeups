@@ -4,6 +4,7 @@ import { vulnerabilityIcon } from './vulnerability-icons.mjs';
 import { notesIndex, notesTopic, noteArticle, noteSections, notesCss, llmIcon } from './notes.mjs';
 import { page as layoutPage } from './layout.mjs';
 import { llmVisualsCss, llmVisualsJs } from './llm-visuals.mjs';
+import { parmisPage, parmisCss, parmisJs } from './parmis.mjs';
 const __name = (value) => value;
 var SOURCE = { owner: "llsohrabll", repo: "Writeups" };
 var API = `https://api.github.com/repos/${SOURCE.owner}/${SOURCE.repo}`;
@@ -270,6 +271,15 @@ var index_default = {
     const url = new URL(request.url);
     if (!["GET", "HEAD"].includes(request.method)) return new Response("Method not allowed", { status: 405, headers: { Allow: "GET, HEAD" } });
     if (url.pathname === "/index.html") return Response.redirect(`${site_config_default.url}/`, 308);
+    if (url.pathname === "/parmis") {
+      url.pathname = "/parmis/";
+      return Response.redirect(url.href, 308);
+    }
+    if (url.pathname === "/parmis/") return new Response(request.method === "HEAD" ? null : parmisPage(), { headers: { ...HEADERS, "Cache-Control": "public, max-age=3600" } });
+    if (url.pathname === "/parmis.css" || url.pathname === "/parmis.js") {
+      const css = url.pathname.endsWith('.css');
+      return new Response(request.method === "HEAD" ? null : css ? parmisCss : parmisJs, { headers: { ...HEADERS, "Content-Type": css ? "text/css; charset=utf-8" : "text/javascript; charset=utf-8", "Cache-Control": "public, max-age=86400" } });
+    }
     if (url.pathname === "/") return new Response(request.method === "HEAD" ? null : homepage(), { headers: { ...HEADERS, "Cache-Control": "public, max-age=60" } });
     if (url.pathname === "/llm-visuals.css" || url.pathname === "/llm-visuals.js") {
       const css = url.pathname.endsWith('.css');
