@@ -22,9 +22,6 @@ function json(body, status = 200, headers = {}) {
   return response(JSON.stringify(body), status, { 'Content-Type': 'application/json; charset=utf-8', ...headers });
 }
 class InputError extends Error { constructor(message, status = 400) { super(message); this.status = status; } }
-export async function digest(value) {
-  return [...new Uint8Array(await crypto.subtle.digest('SHA-256', encoder.encode(value)))].map(n => n.toString(16).padStart(2, '0')).join('');
-}
 function base64url(bytes) {
   return btoa(String.fromCharCode(...bytes)).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
 }
@@ -116,7 +113,7 @@ function photoType(bytes) {
   throw new InputError('Choose a JPEG, PNG, or WebP photo.', 415);
 }
 
-// One private room provides durable, consistent shared storage. Nothing is stored in GitHub.
+// One room provides durable, consistent shared storage. Nothing is stored in GitHub.
 export class TogetherRoom {
   constructor(ctx, env) { this.storage = ctx.storage; this.env = env; }
   async ensureStoryBeginning() {
@@ -164,27 +161,6 @@ export class TogetherRoom {
           await tx.put(metaKey, metadata);
         });
         return json({ photoId: id }, 201);
-      }
-      if (url.pathname === '/login' && request.method === 'POST') {
-        const input = await readJson(request);
-        const now = Date.now();
-        const key = 'auth:' + await digest(String(input.bucket).slice(0, 200));
-        const permitted = await this.storage.transaction(async tx => {
-          const previous = await tx.get(key);
-          const attempt = previous?.until > now ? previous : { count: 0, until: now + 15 * 60 * 1000 };
-          if (attempt.count >= 12) return false;
-          await tx.put(key, { ...attempt, count: attempt.count + 1 });
-          return true;
-        });
-        if (!(await this.storage.getAlarm())) await this.storage.setAlarm(now + 15 * 60 * 1000);
-        if (!permitted) return json({ error: 'Too many tries. Please try again in 15 minutes.' }, 429, { 'Retry-After': '900' });
-        if (typeof input.password !== 'string' || input.password.length > 256 || !this.env.ROOM_PASSWORD_HASH) return json({ error: 'That passphrase does not match.' }, 401);
-        const candidate = await digest(input.password);
-        let difference = candidate.length ^ this.env.ROOM_PASSWORD_HASH.length;
-        for (let i = 0; i < candidate.length; i++) difference |= candidate.charCodeAt(i) ^ (this.env.ROOM_PASSWORD_HASH.charCodeAt(i) || 0);
-        if (difference) return json({ error: 'That passphrase does not match.' }, 401);
-        await this.storage.delete(key);
-        return json({ ok: true });
       }
       if ((url.pathname === '/items' && request.method === 'GET') || (url.pathname === '/items/list' && request.method === 'POST')) {
         await this.ensureStoryBeginning();
@@ -262,16 +238,16 @@ export function createWorker({ page, css, js, illustration }) {
         if (write && (request.headers.get('Origin') !== url.origin || request.headers.get('Sec-Fetch-Site') === 'cross-site')) return json({ error: 'Please use the form on this site.' }, 403);
         const room = () => env.ROOM.get(env.ROOM.idFromName('sohrab-and-parmis'));
         if (url.pathname === '/auth/login' && request.method === 'POST') {
-          if (!env.SESSION_SECRET || !env.ROOM_PASSWORD_HASH || !env.ROOM) return json({ error: 'Your space is not ready yet. Please try again shortly.' }, 503);
-          const input = await readJson(request);
-          const result = await room().fetch(new Request('https://room/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: input.password, bucket: await digest(env.SESSION_SECRET + ':' + (request.headers.get('CF-Connecting-IP') || 'unknown')) }) }));
-          if (!result.ok) return result;
-          return json({ ok: true }, 200, { 'Set-Cookie': `${COOKIE}=${await newSession(env.SESSION_SECRET)}; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=${SESSION_SECONDS}` });
+          if (!env.SESSION_SECRET || !env.ROOM) return json({ error: 'Your space is not ready yet. Please try again shortly.' }, 503);
+          const cookie = `${COOKIE}=${await newSession(env.SESSION_SECRET)}; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=${SESSION_SECONDS}`;
+          // This cookie records the welcome-button click. Anyone may enter; it is not a password gate.
+          if (request.headers.get('Accept')?.includes('text/html')) return response(null, 303, { Location: '/', 'Set-Cookie': cookie });
+          return json({ ok: true }, 200, { 'Set-Cookie': cookie });
         }
         if (url.pathname === '/auth/logout' && request.method === 'POST') return json({ ok: true }, 200, { 'Set-Cookie': `${COOKIE}=; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=0` });
         const authorized = await authenticated(request, env.SESSION_SECRET);
         if (url.pathname.startsWith('/api/')) {
-          if (!authorized) return json({ error: 'Unlock your space to continue.' }, 401);
+          if (!authorized) return json({ error: 'Press Come in to open the journal.' }, 401);
           if (!/^\/api\/(?:items(?:\/list|\/[\da-f-]{36}(?:\/restore)?)?|photos\/[\da-f-]{36})$/.test(url.pathname)) return json({ error: 'Not found.' }, 404);
           if (!['GET', 'HEAD', 'POST', 'PATCH', 'DELETE'].includes(request.method)) return json({ error: 'Method not allowed.' }, 405);
           return await room().fetch(new Request('https://room' + url.pathname.slice(4), request));

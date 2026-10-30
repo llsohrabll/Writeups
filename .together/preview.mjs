@@ -1,12 +1,12 @@
 import { createServer } from 'node:http';
 import { readFile, writeFile } from 'node:fs/promises';
-import { createWorker, TogetherRoom, digest } from './app.mjs';
+import { createWorker, TogetherRoom } from './app.mjs';
 import { page, icons } from './ui.mjs';
 import { MemoryStorage } from './test-storage.mjs';
 
 const dataPath = new URL('.preview-data.json', import.meta.url);
 const storage = new MemoryStorage(await readFile(dataPath, 'utf8').then(text => JSON.parse(text, (key, value) => value?.__bytes ? Uint8Array.from(value.__bytes) : value)).catch(() => []));
-const env = { ROOM_PASSWORD_HASH: await digest('local-preview'), SESSION_SECRET: 'local-preview-session-secret-not-for-production' };
+const env = { SESSION_SECRET: 'local-preview-session-secret-not-for-production' };
 const room = new TogetherRoom({ storage }, env);
 env.ROOM = { idFromName: value => value, get: () => room };
 const css = await readFile(new URL('style.css', import.meta.url), 'utf8');

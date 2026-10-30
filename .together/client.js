@@ -4,9 +4,9 @@ const escape = value => String(value ?? '').replace(/[&<>"']/g, character => ({ 
 async function api(path, method = 'GET', data) {
   const binary = data instanceof Blob;
   try {
-    const response = await fetch(path, { method, credentials: 'same-origin', cache: 'no-store', signal: AbortSignal.timeout(binary ? 45000 : 15000), headers: data !== undefined ? { 'Content-Type': binary ? data.type : 'application/json' } : {}, ...(data !== undefined ? { body: binary ? data : JSON.stringify(data) } : {}) });
+    const response = await fetch(path, { method, credentials: 'same-origin', cache: 'no-store', signal: AbortSignal.timeout(binary ? 45000 : 15000), headers: { Accept: 'application/json', ...(data !== undefined ? { 'Content-Type': binary ? data.type : 'application/json' } : {}) }, ...(data !== undefined ? { body: binary ? data : JSON.stringify(data) } : {}) });
     const value = await response.json().catch(error => { if (error.name === 'AbortError' || error.name === 'TimeoutError') throw error; return {}; });
-    if (response.status === 401 && path.startsWith('/api/')) { location.assign('/'); throw new Error('Please unlock your space again.'); }
+    if (response.status === 401 && path.startsWith('/api/')) { location.assign('/'); throw new Error('Press Come in to open the journal again.'); }
     if (!response.ok) throw new Error(value.error || 'Something went wrong. Please try again.');
     return value;
   } catch (error) {
@@ -21,7 +21,7 @@ loginForm?.addEventListener('submit', async event => {
   const error = document.querySelector('#login-error');
   error.textContent = '';
   button.disabled = true;
-  try { await api('/auth/login', 'POST', { password: loginForm.elements.password.value }); location.assign('/'); }
+  try { await api('/auth/login', 'POST', {}); location.assign('/'); }
   catch (problem) { error.textContent = problem.message; button.disabled = false; }
 });
 async function preparePhoto(file) {
