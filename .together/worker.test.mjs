@@ -69,6 +69,15 @@ test('removal can be undone without losing plan details', async () => {
   assert.equal((await f.request('/api/items/' + item.id + '/restore', 'POST')).status, 200);
   assert.equal((await (await f.request('/api/items')).json()).items[0].notes, plan.notes);
 });
+test('retrying a create request after a connection timeout does not duplicate or overwrite plans', async () => {
+  const f = await fixture(); await f.unlock();
+  const input = { ...plan, id: crypto.randomUUID() };
+  assert.equal((await f.request('/api/items', 'POST', input)).status, 201);
+  assert.equal((await f.request('/api/items', 'POST', input)).status, 201);
+  assert.equal((await (await f.request('/api/items')).json()).items.length, 1);
+  assert.equal((await f.request('/api/items', 'POST', { ...input, title: 'Changed draft' })).status, 409);
+  assert.equal((await (await f.request('/api/items')).json()).items[0].title, plan.title);
+});
 test('invalid types, oversized content, invalid dates and time-only plans are rejected', async () => {
   const f = await fixture(); await f.unlock();
   for (const changes of [{ type: '__proto__' }, { title: '' }, { notes: 'x'.repeat(2001) }, { date: '2026-02-31' }, { time: '25:00' }, { date: '' }]) assert.equal((await f.request('/api/items', 'POST', { ...plan, ...changes })).status, 400);

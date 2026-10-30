@@ -6,8 +6,8 @@ const labels = { quest: 'Quest', meet: 'Meet', shop: 'Shop', little: 'Little thi
 async function api(path, method = 'GET', data) {
   let response;
   try {
-    response = await fetch(path, { method, credentials: 'same-origin', cache: 'no-store', headers: data ? { 'Content-Type': 'application/json' } : {}, ...(data ? { body: JSON.stringify(data) } : {}) });
-  } catch { throw new Error('You seem to be offline. Your saved plans are safe; try again when you reconnect.'); }
+    response = await fetch(path, { method, credentials: 'same-origin', cache: 'no-store', signal: AbortSignal.timeout(15000), headers: data ? { 'Content-Type': 'application/json' } : {}, ...(data ? { body: JSON.stringify(data) } : {}) });
+  } catch { throw new Error('The connection is taking too long. Your saved plans are safe. Please try again.'); }
   const value = await response.json().catch(() => ({}));
   if (response.status === 401 && path.startsWith('/api/')) { location.assign('/'); throw new Error('Please unlock your space again.'); }
   if (!response.ok) throw new Error(value.error || 'Something went wrong. Please try again.');
@@ -29,6 +29,7 @@ if (document.body.dataset.authenticated === 'true') {
   let category = 'all';
   let status = 'open';
   let editing = null;
+  let newId = null;
   let loading = null;
   let toastTimer;
   const board = document.querySelector('#items');
@@ -81,6 +82,7 @@ if (document.body.dataset.authenticated === 'true') {
   }
   async function openForm(type = 'quest', item = null) {
     editing = item;
+    newId = item ? null : crypto.randomUUID();
     form.reset();
     formError.textContent = '';
     document.querySelector('#dialog-title').textContent = item ? 'A little change of plan.' : 'Make a little plan.';
@@ -101,6 +103,7 @@ if (document.body.dataset.authenticated === 'true') {
     const button = form.querySelector('[type=submit]');
     const data = Object.fromEntries(new FormData(form));
     if (editing) data.revision = editing.revision;
+    else data.id = newId;
     button.disabled = true;
     try {
       const { item } = await api(editing ? '/api/items/' + editing.id : '/api/items', editing ? 'PATCH' : 'POST', data);
@@ -113,7 +116,7 @@ if (document.body.dataset.authenticated === 'true') {
       render();
       dialog.close();
       notify(editing ? 'Our plan is updated.' : 'A little plan to look forward to.');
-    } catch (error) { formError.textContent = error.message; if (error.message.includes('another device')) await refresh(); }
+    } catch (error) { formError.textContent = error.message; if (error.message.includes('another device') || error.message.includes('already saved')) await refresh(); }
     finally { button.disabled = false; }
   });
   for (const filter of document.querySelectorAll('[data-filter]')) filter.addEventListener('click', () => {

@@ -130,13 +130,21 @@ export class TogetherRoom {
         return json({ items: [...entries.values()].filter(item => !item.deletedAt) });
       }
       if (url.pathname === '/items' && request.method === 'POST') {
-        const fields = planFields(await readJson(request));
+        const input = await readJson(request);
+        const fields = planFields(input);
+        if (input.id !== undefined && (typeof input.id !== 'string' || !/^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/.test(input.id))) throw new InputError('Invalid plan identifier.');
         if (fields.time && !fields.date) throw new InputError('Add a date with the time.');
-        const item = { ...fields, id: crypto.randomUUID(), done: false, revision: 1, createdAt: Date.now(), updatedAt: Date.now(), deletedAt: null };
-        await this.storage.transaction(async tx => {
+        const candidate = { ...fields, id: input.id || crypto.randomUUID(), done: false, revision: 1, createdAt: Date.now(), updatedAt: Date.now(), deletedAt: null };
+        const item = await this.storage.transaction(async tx => {
+          const previous = await tx.get('plan:' + candidate.id);
+          if (previous) {
+            if (previous.deletedAt || Object.entries(fields).some(([key, value]) => previous[key] !== value)) throw new InputError('This plan was already saved. Close this form to edit it.', 409);
+            return previous;
+          }
           const existing = await tx.list({ prefix: 'plan:', limit: 1000 });
           if (existing.size >= 1000) throw new InputError('Your space is full. Download your plans before adding more.', 409);
-          await tx.put('plan:' + item.id, item);
+          await tx.put('plan:' + candidate.id, candidate);
+          return candidate;
         });
         return json({ item }, 201);
       }
