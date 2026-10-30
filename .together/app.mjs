@@ -276,7 +276,15 @@ export function createWorker({ page, css, js, illustration }) {
           if (!['GET', 'HEAD', 'POST', 'PATCH', 'DELETE'].includes(request.method)) return json({ error: 'Method not allowed.' }, 405);
           return await room().fetch(new Request('https://room' + url.pathname.slice(4), request));
         }
-        if (url.pathname === '/' && ['GET', 'HEAD'].includes(request.method)) return response(request.method === 'HEAD' ? null : page(authorized), 200, { 'Content-Type': 'text/html; charset=utf-8', Vary: 'Cookie' });
+        if (url.pathname === '/' && ['GET', 'HEAD'].includes(request.method)) {
+          let initialItems = [];
+          if (authorized && request.method !== 'HEAD') {
+            const initial = await room().fetch(new Request('https://room/items/list', { method: 'POST' }));
+            if (!initial.ok) throw new Error('Could not open memories');
+            initialItems = (await initial.json()).items;
+          }
+          return response(request.method === 'HEAD' ? null : page(authorized, initialItems), 200, { 'Content-Type': 'text/html; charset=utf-8', Vary: 'Cookie' });
+        }
         return response('Page not found', 404, { 'Content-Type': 'text/plain; charset=utf-8' });
       } catch (error) {
         if (error instanceof InputError) return json({ error: error.message }, error.status);

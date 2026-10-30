@@ -12,7 +12,7 @@ env.ROOM = { idFromName: value => value, get: () => room };
 const css = await readFile(new URL('style.css', import.meta.url), 'utf8');
 const js = 'const icons = ' + JSON.stringify(icons) + ';\n' + await readFile(new URL('client.js', import.meta.url), 'utf8');
 const illustration = await readFile(new URL('assets/couple.webp', import.meta.url));
-const worker = createWorker({ page, css, js, illustration });
+const worker = createWorker({ page: (authorized, items) => page(authorized, 'preview', items), css, js, illustration });
 const server = createServer(async (incoming, outgoing) => {
   try {
     const chunks = [];

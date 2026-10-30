@@ -43,7 +43,9 @@ async function preparePhoto(file) {
   } finally { URL.revokeObjectURL(source); }
 }
 if (document.body.dataset.authenticated === 'true') {
-  let items = [], editing = null, newId = null, loading = null, saving = false, toastTimer;
+  let initialItems = [];
+  try { initialItems = JSON.parse(document.querySelector('#initial-memories')?.textContent || '[]'); } catch {}
+  let items = initialItems, editing = null, newId = null, loading = null, saving = false, toastTimer;
   let photoId = null, photoBlob = null, uploadId = null, previewUrl = null, photoGeneration = 0, preparing = false;
   const board = document.querySelector('#items');
   const dialog = document.querySelector('#plan-dialog');
@@ -180,7 +182,7 @@ if (document.body.dataset.authenticated === 'true') {
     if (!button) return;
     const item = items.find(item => item.id === button.closest('[data-id]').dataset.id);
     if (!item) return;
-    if (button.dataset.action === 'edit') { await refresh(); return openForm(items.find(latest => latest.id === item.id) || item); }
+    if (button.dataset.action === 'edit') return openForm(item);
     button.disabled = true;
     try {
       await api('/api/items/' + item.id, 'DELETE');
@@ -203,5 +205,5 @@ if (document.body.dataset.authenticated === 'true') {
   window.addEventListener('focus', () => { if (!dialog.open) refresh(); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden && !dialog.open) refresh(); });
   setInterval(() => { if (!document.hidden && !dialog.open) refresh(); }, 45000);
-  refresh();
+  render();
 }

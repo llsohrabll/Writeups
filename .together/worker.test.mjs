@@ -10,7 +10,7 @@ async function fixture({ storySample = false } = {}) {
   const env = { SESSION_SECRET: crypto.randomUUID(), ROOM_PASSWORD_HASH: await digest('test-only-passphrase') };
   let room = new TogetherRoom({ storage }, env);
   env.ROOM = { idFromName: id => id, get: () => room };
-  const worker = createWorker({ page, css: '', js: '', illustration: '' });
+  const worker = createWorker({ page: (authorized, items) => page(authorized, 'test', items), css: '', js: '', illustration: '' });
   let cookie = '';
   async function request(path, method = 'GET', input, options = {}) {
     return worker.fetch(new Request('https://we.nightwatch.team' + path, { method, headers: { Origin: options.origin ?? 'https://we.nightwatch.team', 'Content-Type': options.contentType ?? 'application/json', Cookie: options.cookie ?? cookie, 'CF-Connecting-IP': options.ip || '192.0.2.1' }, ...(options.bytes ? { body: options.bytes } : input !== undefined ? { body: JSON.stringify(input) } : {}) }), env);
@@ -163,4 +163,17 @@ test('memory page provides photo and date fields without plan filters, counts or
   assert.match(html, /type="file"/);
   assert.match(html, /Add a memory/);
   assert.doesNotMatch(html, /data-filter|data-count|status-filter|Quests|Meets|Shops|Little things|Add a plan/);
+});
+test('the authenticated page renders memories immediately and escapes captions and initial JSON', async () => {
+  const f = await fixture(); await f.unlock();
+  await f.request('/api/items', 'POST', { title: 'Our moment', notes: '</script><script>alert(1)</script>', date: '2026-08-14', time: '' });
+  const response = await f.request('/');
+  const html = await response.text();
+  assert.match(html, /<h2>Our moment<\/h2>/);
+  assert.match(html, /14 Aug/);
+  assert.doesNotMatch(html, /<script>alert/);
+  assert.match(html, /\\u003c\/script/);
+  assert.equal(response.headers.get('Cache-Control'), 'no-store');
+  const locked = await f.request('/', 'GET', undefined, { cookie: '' });
+  assert.doesNotMatch(await locked.text(), /Our moment/);
 });
