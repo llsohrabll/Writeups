@@ -4,15 +4,16 @@ import { createWorker, TogetherRoom, digest } from './app.mjs';
 import { MemoryStorage } from './test-storage.mjs';
 import { page } from './ui.mjs';
 
-async function fixture() {
+async function fixture({ storySample = false } = {}) {
   const storage = new MemoryStorage();
+  if (!storySample) await storage.put('meta:story-begin-v1', true);
   const env = { SESSION_SECRET: crypto.randomUUID(), ROOM_PASSWORD_HASH: await digest('test-only-passphrase') };
   let room = new TogetherRoom({ storage }, env);
   env.ROOM = { idFromName: id => id, get: () => room };
   const worker = createWorker({ page, css: '', js: '', illustration: '' });
   let cookie = '';
   async function request(path, method = 'GET', input, options = {}) {
-    return worker.fetch(new Request('https://we.nightwatch.team' + path, { method, headers: { Origin: options.origin ?? 'https://we.nightwatch.team', 'Content-Type': 'application/json', Cookie: options.cookie ?? cookie, 'CF-Connecting-IP': options.ip || '192.0.2.1' }, ...(input !== undefined ? { body: JSON.stringify(input) } : {}) }), env);
+    return worker.fetch(new Request('https://we.nightwatch.team' + path, { method, headers: { Origin: options.origin ?? 'https://we.nightwatch.team', 'Content-Type': options.contentType ?? 'application/json', Cookie: options.cookie ?? cookie, 'CF-Connecting-IP': options.ip || '192.0.2.1' }, ...(options.bytes ? { body: options.bytes } : input !== undefined ? { body: JSON.stringify(input) } : {}) }), env);
   }
   async function unlock() {
     const result = await request('/auth/login', 'POST', { password: 'test-only-passphrase' });
@@ -100,4 +101,66 @@ test('private responses are never cached; public assets keep strict security hea
   const style = await f.request('/we.css');
   assert.equal(style.headers.get('Content-Type'), 'text/css; charset=utf-8');
   assert.match(style.headers.get('Content-Security-Policy'), /frame-ancestors 'none'/);
+});
+
+test('the story begins on 14 August 2026 and the sample is seeded only once', async () => {
+  const f = await fixture({ storySample: true }); await f.unlock();
+  const first = (await (await f.request('/api/items/list', 'POST', {})).json()).items;
+  assert.equal(first.length, 1);
+  assert.equal(first[0].title, 'Our story begins');
+  assert.equal(first[0].date, '2026-08-14');
+  assert.equal(first[0].time, '');
+  f.restart();
+  assert.equal((await (await f.request('/api/items/list', 'POST', {})).json()).items.length, 1);
+  await f.request('/api/items/' + first[0].id, 'DELETE');
+  assert.equal((await (await f.request('/api/items/list', 'POST', {})).json()).items.length, 0);
+});
+const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j8ioAAAAASUVORK5CYII=', 'base64');
+test('photos persist privately and attach to an editable memory', async () => {
+  const f = await fixture();
+  const id = crypto.randomUUID();
+  assert.equal((await f.request('/api/photos/' + id, 'GET')).status, 401);
+  assert.equal((await f.request('/api/photos/' + id, 'POST', undefined, { contentType: 'image/png', bytes: png })).status, 401);
+  await f.unlock();
+  assert.equal((await f.request('/api/photos/' + id, 'POST', undefined, { contentType: 'image/png', bytes: png })).status, 201);
+  f.restart();
+  const photo = await f.request('/api/photos/' + id);
+  assert.equal(photo.headers.get('Content-Type'), 'image/png');
+  assert.equal(photo.headers.get('Cache-Control'), 'no-store');
+  assert.deepEqual(Buffer.from(await photo.arrayBuffer()), png);
+  const created = await f.request('/api/items', 'POST', { title: 'Our photo', notes: 'A lovely afternoon.', date: '2026-08-14', time: '17:30', photoId: id });
+  assert.equal(created.status, 201);
+  const { item } = await created.json();
+  assert.equal(item.photoId, id);
+  assert.equal(item.type, 'memory');
+  const edited = await f.request('/api/items/' + item.id, 'PATCH', { notes: 'A changed caption.', revision: item.revision });
+  assert.equal((await edited.json()).item.photoId, id);
+});
+test('photo chunk boundaries and idempotent retries preserve uploaded bytes', async () => {
+  const f = await fixture(); await f.unlock();
+  const id = crypto.randomUUID();
+  const bytes = new Uint8Array(150000);
+  bytes.set(png);
+  for (let index = png.length; index < bytes.length; index++) bytes[index] = index % 251;
+  for (let attempt = 0; attempt < 2; attempt++) assert.equal((await f.request('/api/photos/' + id, 'POST', undefined, { contentType: 'image/png', bytes })).status, 201);
+  const restored = new Uint8Array(await (await f.request('/api/photos/' + id)).arrayBuffer());
+  assert.deepEqual(restored, bytes);
+  assert.equal((await f.storage.list({ prefix: 'photo-data:' + id })).size, 3);
+  assert.equal((await f.request('/api/photos/' + id, 'POST', undefined, { contentType: 'image/png', bytes: png })).status, 409);
+});
+test('unsafe or oversized photos, missing references and cross-origin uploads are refused', async () => {
+  const f = await fixture(); await f.unlock();
+  const path = '/api/photos/' + crypto.randomUUID();
+  assert.equal((await f.request(path, 'POST', undefined, { contentType: 'image/svg+xml', bytes: new TextEncoder().encode('<svg/>') })).status, 415);
+  assert.equal((await f.request(path, 'POST', undefined, { contentType: 'image/png', bytes: new TextEncoder().encode('<script>bad</script>') })).status, 415);
+  assert.equal((await f.request(path, 'POST', undefined, { contentType: 'image/png', bytes: new Uint8Array(2 * 1024 * 1024 + 1) })).status, 413);
+  assert.equal((await f.request(path, 'POST', undefined, { contentType: 'image/png', bytes: png, origin: 'https://example.com' })).status, 403);
+  assert.equal((await f.request('/api/items', 'POST', { ...plan, photoId: crypto.randomUUID() })).status, 400);
+});
+test('memory page provides photo and date fields without plan filters, counts or categories', () => {
+  const html = page(true);
+  assert.match(html, /Made for two/);
+  assert.match(html, /type="file"/);
+  assert.match(html, /Add a memory/);
+  assert.doesNotMatch(html, /data-filter|data-count|status-filter|Quests|Meets|Shops|Little things|Add a plan/);
 });

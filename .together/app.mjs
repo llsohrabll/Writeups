@@ -1,13 +1,16 @@
 const SESSION_SECONDS = 60 * 60 * 24 * 30;
 const COOKIE = '__Host-we-session';
 const encoder = new TextEncoder();
-const TYPES = new Set(['quest', 'meet', 'shop', 'little']);
+const TYPES = new Set(['memory', 'quest', 'meet', 'shop', 'little']);
+const UUID = /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/;
+const PHOTO_LIMIT = 2 * 1024 * 1024;
+const PHOTO_CHUNK = 64 * 1024;
 const SECURITY = {
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'DENY',
   'Referrer-Policy': 'no-referrer',
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-  'Content-Security-Policy': "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+  'Content-Security-Policy': "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
   'X-Robots-Tag': 'noindex, nofollow',
   'Cache-Control': 'no-store',
 };
@@ -46,8 +49,7 @@ async function authenticated(request, secret) {
     return crypto.subtle.verify('HMAC', await signingKey(secret), bytes, encoder.encode(`${expires}.${nonce}`));
   } catch { return false; }
 }
-async function readJson(request) {
-  if (!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type') || '')) throw new InputError('Please send JSON.', 415);
+async function readBytes(request, limit, message) {
   const reader = request.body?.getReader();
   if (!reader) throw new InputError('A request body is required.');
   const chunks = [];
@@ -56,12 +58,17 @@ async function readJson(request) {
     const { value, done } = await reader.read();
     if (done) break;
     length += value.byteLength;
-    if (length > 16384) { await reader.cancel(); throw new InputError('This plan is too long.', 413); }
+    if (length > limit) { await reader.cancel(); throw new InputError(message, 413); }
     chunks.push(value);
   }
   const bytes = new Uint8Array(length);
   let offset = 0;
   for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.length; }
+  return bytes;
+}
+async function readJson(request) {
+  if (!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type') || '')) throw new InputError('Please send JSON.', 415);
+  const bytes = await readBytes(request, 16384, 'This memory is too long.');
   try {
     const value = JSON.parse(new TextDecoder().decode(bytes));
     if (!value || Array.isArray(value) || typeof value !== 'object') throw new Error();
@@ -78,8 +85,8 @@ function planFields(input, partial = false) {
     if (!partial || Object.hasOwn(input, name)) fields[name] = text(input[name] ?? '', name[0].toUpperCase() + name.slice(1), max, name === 'title');
   }
   if (!partial || Object.hasOwn(input, 'type')) {
-    if (!TYPES.has(input.type)) throw new InputError('Choose a plan type.');
-    fields.type = input.type;
+    if (input.type !== undefined && !TYPES.has(input.type)) throw new InputError('Invalid entry type.');
+    fields.type = input.type || 'memory';
   }
   if (!partial || Object.hasOwn(input, 'date')) {
     const date = text(input.date ?? '', 'Date', 10);
@@ -95,15 +102,69 @@ function planFields(input, partial = false) {
     if (typeof input.done !== 'boolean') throw new InputError('Invalid completion value.');
     fields.done = input.done;
   }
+  if (!partial || Object.hasOwn(input, 'photoId')) {
+    if (input.photoId != null && input.photoId !== '' && (typeof input.photoId !== 'string' || !UUID.test(input.photoId))) throw new InputError('Invalid photo.');
+    fields.photoId = input.photoId || null;
+  }
   return fields;
+}
+
+function photoType(bytes) {
+  if (bytes.length >= 12 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return 'image/jpeg';
+  if (bytes.length >= 24 && [137,80,78,71,13,10,26,10].every((byte, index) => bytes[index] === byte)) return 'image/png';
+  if (bytes.length >= 20 && new TextDecoder().decode(bytes.slice(0, 4)) === 'RIFF' && new TextDecoder().decode(bytes.slice(8, 12)) === 'WEBP') return 'image/webp';
+  throw new InputError('Choose a JPEG, PNG, or WebP photo.', 415);
 }
 
 // One private room provides durable, consistent shared storage. Nothing is stored in GitHub.
 export class TogetherRoom {
   constructor(ctx, env) { this.storage = ctx.storage; this.env = env; }
+  async ensureStoryBeginning() {
+    await this.storage.transaction(async tx => {
+      if (await tx.get('meta:story-begin-v1')) return;
+      const id = '14a82026-0000-4000-8000-000000000001';
+      if (!(await tx.get('plan:' + id))) await tx.put('plan:' + id, { id, type: 'memory', title: 'Our story begins', notes: 'The first page of our favorite story.', date: '2026-08-14', time: '', place: '', photoId: null, done: false, revision: 1, createdAt: Date.now(), updatedAt: Date.now(), deletedAt: null });
+      await tx.put('meta:story-begin-v1', true);
+    });
+  }
   async fetch(request) {
     try {
       const url = new URL(request.url);
+      const photoMatch = url.pathname.match(/^\/photos\/([\da-f-]{36})$/);
+      if (photoMatch) {
+        const id = photoMatch[1];
+        if (!UUID.test(id)) throw new InputError('Invalid photo.');
+        const metaKey = 'photo-meta:' + id;
+        if (['GET', 'HEAD'].includes(request.method)) {
+          const metadata = await this.storage.get(metaKey);
+          if (!metadata) return json({ error: 'Photo not found.' }, 404);
+          if (request.method === 'HEAD') return response(null, 200, { 'Content-Type': metadata.type, 'Content-Length': String(metadata.size) });
+          const keys = Array.from({ length: metadata.chunks }, (_, index) => `photo-data:${id}:${index}`);
+          const chunks = await this.storage.get(keys);
+          const bytes = new Uint8Array(metadata.size);
+          for (let index = 0; index < keys.length; index++) {
+            const chunk = chunks.get(keys[index]);
+            if (!chunk) throw new Error('Missing photo chunk');
+            bytes.set(new Uint8Array(chunk), index * PHOTO_CHUNK);
+          }
+          return response(bytes, 200, { 'Content-Type': metadata.type, 'Content-Length': String(bytes.length) });
+        }
+        if (request.method !== 'POST') return json({ error: 'Method not allowed.' }, 405);
+        if (!/^image\/(?:jpeg|png|webp)$/.test(request.headers.get('Content-Type') || '')) throw new InputError('Choose a JPEG, PNG, or WebP photo.', 415);
+        const bytes = await readBytes(request, PHOTO_LIMIT, 'Choose a photo under 2 MB after resizing.');
+        const type = photoType(bytes);
+        const fingerprint = await crypto.subtle.digest('SHA-256', bytes);
+        const hash = base64url(new Uint8Array(fingerprint));
+        const metadata = { type, size: bytes.length, chunks: Math.ceil(bytes.length / PHOTO_CHUNK), hash, createdAt: Date.now() };
+        await this.storage.transaction(async tx => {
+          const existing = await tx.get(metaKey);
+          if (existing) { if (existing.hash !== hash) throw new InputError('This photo upload changed. Please choose the photo again.', 409); return; }
+          if ((await tx.list({ prefix: 'photo-meta:', limit: 1000 })).size >= 1000) throw new InputError('Your photo space is full.', 409);
+          for (let index = 0; index < metadata.chunks; index++) await tx.put(`photo-data:${id}:${index}`, bytes.slice(index * PHOTO_CHUNK, (index + 1) * PHOTO_CHUNK));
+          await tx.put(metaKey, metadata);
+        });
+        return json({ photoId: id }, 201);
+      }
       if (url.pathname === '/login' && request.method === 'POST') {
         const input = await readJson(request);
         const now = Date.now();
@@ -126,6 +187,7 @@ export class TogetherRoom {
         return json({ ok: true });
       }
       if ((url.pathname === '/items' && request.method === 'GET') || (url.pathname === '/items/list' && request.method === 'POST')) {
+        await this.ensureStoryBeginning();
         const entries = await this.storage.list({ prefix: 'plan:', limit: 1000 });
         return json({ items: [...entries.values()].filter(item => !item.deletedAt) });
       }
@@ -136,6 +198,7 @@ export class TogetherRoom {
         if (fields.time && !fields.date) throw new InputError('Add a date with the time.');
         const candidate = { ...fields, id: input.id || crypto.randomUUID(), done: false, revision: 1, createdAt: Date.now(), updatedAt: Date.now(), deletedAt: null };
         const item = await this.storage.transaction(async tx => {
+          if (fields.photoId && !(await tx.get('photo-meta:' + fields.photoId))) throw new InputError('Please upload the photo before saving.');
           const previous = await tx.get('plan:' + candidate.id);
           if (previous) {
             if (previous.deletedAt || Object.entries(fields).some(([key, value]) => previous[key] !== value)) throw new InputError('This plan was already saved. Close this form to edit it.', 409);
@@ -161,6 +224,7 @@ export class TogetherRoom {
         else if (match[2]) changes = { deletedAt: null };
         else {
           changes = planFields(input, true);
+          if (changes.photoId && !(await tx.get('photo-meta:' + changes.photoId))) throw new InputError('Please upload the photo before saving.');
           const editing = Object.keys(changes).some(key => key !== 'done');
           if (editing && input.revision !== current.revision) throw new InputError('This plan was changed on another device. Close this form and open it again to see the latest version.', 409);
           if ((changes.time ?? current.time) && !(changes.date ?? current.date)) throw new InputError('Add a date with the time.');
@@ -208,9 +272,9 @@ export function createWorker({ page, css, js, illustration }) {
         const authorized = await authenticated(request, env.SESSION_SECRET);
         if (url.pathname.startsWith('/api/')) {
           if (!authorized) return json({ error: 'Unlock your space to continue.' }, 401);
-          if (!/^\/api\/items(?:\/list|\/[\da-f-]{36}(?:\/restore)?)?$/.test(url.pathname)) return json({ error: 'Not found.' }, 404);
-          if (!['GET', 'POST', 'PATCH', 'DELETE'].includes(request.method)) return json({ error: 'Method not allowed.' }, 405);
-          return room().fetch(new Request('https://room' + url.pathname.slice(4), request));
+          if (!/^\/api\/(?:items(?:\/list|\/[\da-f-]{36}(?:\/restore)?)?|photos\/[\da-f-]{36})$/.test(url.pathname)) return json({ error: 'Not found.' }, 404);
+          if (!['GET', 'HEAD', 'POST', 'PATCH', 'DELETE'].includes(request.method)) return json({ error: 'Method not allowed.' }, 405);
+          return await room().fetch(new Request('https://room' + url.pathname.slice(4), request));
         }
         if (url.pathname === '/' && ['GET', 'HEAD'].includes(request.method)) return response(request.method === 'HEAD' ? null : page(authorized), 200, { 'Content-Type': 'text/html; charset=utf-8', Vary: 'Cookie' });
         return response('Page not found', 404, { 'Content-Type': 'text/plain; charset=utf-8' });

@@ -5,7 +5,7 @@ import { page, icons } from './ui.mjs';
 import { MemoryStorage } from './test-storage.mjs';
 
 const dataPath = new URL('.preview-data.json', import.meta.url);
-const storage = new MemoryStorage(await readFile(dataPath, 'utf8').then(JSON.parse).catch(() => []));
+const storage = new MemoryStorage(await readFile(dataPath, 'utf8').then(text => JSON.parse(text, (key, value) => value?.__bytes ? Uint8Array.from(value.__bytes) : value)).catch(() => []));
 const env = { ROOM_PASSWORD_HASH: await digest('local-preview'), SESSION_SECRET: 'local-preview-session-secret-not-for-production' };
 const room = new TogetherRoom({ storage }, env);
 env.ROOM = { idFromName: value => value, get: () => room };
@@ -21,7 +21,7 @@ const server = createServer(async (incoming, outgoing) => {
     const result = await worker.fetch(request, env);
     outgoing.writeHead(result.status, { ...Object.fromEntries(result.headers), 'Cache-Control': 'no-store' });
     outgoing.end(Buffer.from(await result.arrayBuffer()));
-    await writeFile(dataPath, JSON.stringify([...storage.data]));
+    await writeFile(dataPath, JSON.stringify([...storage.data], (key, value) => value instanceof Uint8Array ? { __bytes: [...value] } : value));
   } catch (error) { outgoing.writeHead(500); outgoing.end(error.message); }
 });
 server.listen(8788, '127.0.0.1', () => console.log('Shared-space preview: http://127.0.0.1:8788/'));

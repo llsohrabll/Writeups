@@ -1,7 +1,7 @@
 // A local storage adapter for preview and isolated Worker tests; never deployed.
 export class MemoryStorage {
   constructor(entries = []) { this.data = new Map(entries); this.queue = Promise.resolve(); this.alarmTime = null; }
-  async get(key) { return structuredClone(this.data.get(key)); }
+  async get(key) { return Array.isArray(key) ? new Map(key.filter(entry => this.data.has(entry)).map(entry => [entry, structuredClone(this.data.get(entry))])) : structuredClone(this.data.get(key)); }
   async put(key, value) { this.data.set(key, structuredClone(value)); }
   async delete(key) { if (Array.isArray(key)) { for (const entry of key) this.data.delete(entry); } else this.data.delete(key); }
   async list({ prefix = '', limit = 1000 } = {}) { return new Map([...this.data].filter(([key]) => key.startsWith(prefix)).slice(0, limit).map(([key,value]) => [key, structuredClone(value)])); }

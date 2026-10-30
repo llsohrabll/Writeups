@@ -1,17 +1,18 @@
 // The build prepends the trusted icon paths shared with the server-rendered page.
 const svg = name => `<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${icons[name] || ''}</svg>`;
 const escape = value => String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
-const labels = { quest: 'Quest', meet: 'Meet', shop: 'Shop', little: 'Little thing' };
-
 async function api(path, method = 'GET', data) {
-  let response;
+  const binary = data instanceof Blob;
   try {
-    response = await fetch(path, { method, credentials: 'same-origin', cache: 'no-store', signal: AbortSignal.timeout(15000), headers: data ? { 'Content-Type': 'application/json' } : {}, ...(data ? { body: JSON.stringify(data) } : {}) });
-  } catch { throw new Error('The connection is taking too long. Your saved plans are safe. Please try again.'); }
-  const value = await response.json().catch(() => ({}));
-  if (response.status === 401 && path.startsWith('/api/')) { location.assign('/'); throw new Error('Please unlock your space again.'); }
-  if (!response.ok) throw new Error(value.error || 'Something went wrong. Please try again.');
-  return value;
+    const response = await fetch(path, { method, credentials: 'same-origin', cache: 'no-store', signal: AbortSignal.timeout(binary ? 45000 : 15000), headers: data !== undefined ? { 'Content-Type': binary ? data.type : 'application/json' } : {}, ...(data !== undefined ? { body: binary ? data : JSON.stringify(data) } : {}) });
+    const value = await response.json().catch(error => { if (error.name === 'AbortError' || error.name === 'TimeoutError') throw error; return {}; });
+    if (response.status === 401 && path.startsWith('/api/')) { location.assign('/'); throw new Error('Please unlock your space again.'); }
+    if (!response.ok) throw new Error(value.error || 'Something went wrong. Please try again.');
+    return value;
+  } catch (error) {
+    if (['TypeError', 'AbortError', 'TimeoutError'].includes(error.name)) throw new Error('The connection is taking too long. Your saved memories are safe. Please try again.');
+    throw error;
+  }
 }
 const loginForm = document.querySelector('#login-form');
 loginForm?.addEventListener('submit', async event => {
@@ -23,15 +24,27 @@ loginForm?.addEventListener('submit', async event => {
   try { await api('/auth/login', 'POST', { password: loginForm.elements.password.value }); location.assign('/'); }
   catch (problem) { error.textContent = problem.message; button.disabled = false; }
 });
-
+async function preparePhoto(file) {
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw new Error('Choose a JPEG, PNG, or WebP photo.');
+  if (file.size > 20 * 1024 * 1024) throw new Error('Choose a photo smaller than 20 MB.');
+  const source = URL.createObjectURL(file);
+  try {
+    const image = await new Promise((resolve, reject) => { const image = new Image(); image.onload = () => resolve(image); image.onerror = () => reject(new Error('This photo could not be opened. Please choose another.')); image.src = source; });
+    const canvas = document.createElement('canvas');
+    const scale = Math.min(1, 1600 / Math.max(image.naturalWidth, image.naturalHeight));
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+    canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+    for (const quality of [.84, .72, .6, .48]) {
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', quality));
+      if (blob && blob.size <= 2 * 1024 * 1024) return blob;
+    }
+    throw new Error('This photo is still too large. Please choose a smaller image.');
+  } finally { URL.revokeObjectURL(source); }
+}
 if (document.body.dataset.authenticated === 'true') {
-  let items = [];
-  let category = 'all';
-  let status = 'open';
-  let editing = null;
-  let newId = null;
-  let loading = null;
-  let toastTimer;
+  let items = [], editing = null, newId = null, loading = null, saving = false, toastTimer;
+  let photoId = null, photoBlob = null, uploadId = null, previewUrl = null, photoGeneration = 0, preparing = false;
   const board = document.querySelector('#items');
   const dialog = document.querySelector('#plan-dialog');
   const form = document.querySelector('#plan-form');
@@ -39,7 +52,12 @@ if (document.body.dataset.authenticated === 'true') {
   const formError = document.querySelector('#plan-error');
   const toast = document.querySelector('#toast');
   const toastButton = toast.querySelector('button');
-
+  const photoInput = document.querySelector('#memory-photo');
+  const photoPreview = document.querySelector('#photo-preview');
+  const photoPrompt = document.querySelector('#photo-prompt');
+  const photoStatus = document.querySelector('#photo-status');
+  const removePhoto = document.querySelector('#remove-photo');
+  const submit = form.querySelector('[type=submit]');
   function notify(message, undo) {
     clearTimeout(toastTimer);
     toast.querySelector('span').textContent = message;
@@ -48,121 +66,139 @@ if (document.body.dataset.authenticated === 'true') {
     toast.hidden = false;
     toastTimer = setTimeout(() => { toast.hidden = true; }, undo ? 10000 : 3500);
   }
-  const matchesStatus = item => status === 'all' || (status === 'done' ? item.done : !item.done);
   function dateLabel(item) {
-    if (!item.date) return '';
+    if (!item.date) return '<span>Just us</span>';
     const date = new Date(item.date + 'T12:00:00');
-    return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', ...(date.getFullYear() !== new Date().getFullYear() ? { year: 'numeric' } : {}) }).format(date) + (item.time ? ' · ' + item.time : '');
+    const month = new Intl.DateTimeFormat('en', { month: 'short' }).format(date);
+    return `<span>${date.getDate()} ${month}</span><small>${date.getFullYear()}</small>${item.time ? `<small class="memory-time">${escape(item.time)}</small>` : ''}`;
   }
   function render() {
-    const available = items.filter(matchesStatus);
-    const selected = available.filter(item => category === 'all' || item.type === category).sort((a, b) => Number(a.done) - Number(b.done) || (a.date || '9999').localeCompare(b.date || '9999') || b.createdAt - a.createdAt);
-    for (const count of document.querySelectorAll('[data-count]')) count.textContent = count.dataset.count === 'all' ? available.length : available.filter(item => item.type === count.dataset.count).length;
-    const openCount = items.filter(item => !item.done).length;
-    const doneCount = items.filter(item => item.done).length;
-    document.querySelector('#plan-summary').textContent = status === 'done' ? `${doneCount} ${doneCount === 1 ? 'memory made' : 'memories made'} together.` : openCount ? `${openCount} little ${openCount === 1 ? 'plan' : 'plans'} to look forward to.` : 'A place for all our little plans.';
-    if (!items.length && category === 'all' && status !== 'done') {
-      board.innerHTML = [['quest', 'A new adventure', 'Somewhere new. Something we’ve never tried.'], ['meet', 'Time together', 'A coffee, a movie, a long walk.'], ['shop', 'A little shopping', 'The things and places on our wishlist.']].map(([type, title, copy]) => `<button class="starter" data-starter="${type}"><span class="type-icon type-${type}">${svg(type)}</span><h3>${title}</h3><p>${copy}</p><span class="add-corner">${svg('plus')}</span></button>`).join('');
+    const sorted = [...items].sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.time || '').localeCompare(a.time || '') || b.createdAt - a.createdAt);
+    if (!sorted.length) {
+      board.innerHTML = `<div class="empty-message"><h3>Our next little memory.</h3><p>A photo, a few words, a moment worth keeping.</p><button class="primary" data-add>${svg('plus')} Add a memory</button></div>`;
       return;
     }
-    if (!selected.length) {
-      board.innerHTML = `<div class="empty-message"><h3>${status === 'done' ? 'The good memories are ahead.' : 'A little room for something lovely.'}</h3><p>${status === 'done' ? 'The plans we finish together will live here.' : 'Our next little plan can start right here.'}</p>${status !== 'done' ? '<button class="primary" data-add>' + svg('plus') + ' Add a plan</button>' : ''}</div>`;
-      return;
-    }
-    board.innerHTML = selected.map(item => `<article class="plan${item.done ? ' is-done' : ''}" data-id="${escape(item.id)}" data-type="${escape(item.type)}"><div class="plan-top"><span class="type-label">${svg(item.type)} ${labels[item.type]}</span><button class="complete" data-action="complete" aria-label="${item.done ? 'Mark still to do' : 'Mark done'}: ${escape(item.title)}" aria-pressed="${item.done}">${item.done ? svg('check') : ''}</button></div><h3>${escape(item.title)}</h3>${item.notes ? `<p class="plan-notes">${escape(item.notes)}</p>` : ''}${item.date ? `<p class="plan-meta">${svg('meet')}<time datetime="${escape(item.date + (item.time ? 'T' + item.time : ''))}">${escape(dateLabel(item))}</time></p>` : ''}${item.place ? `<p class="plan-meta">${svg('pin')} ${escape(item.place)}</p>` : ''}<div class="plan-bottom"><span class="done-label">${item.done ? 'Done together ♡' : ''}</span><div class="card-actions"><button class="icon-button" data-action="edit" aria-label="Edit ${escape(item.title)}" title="Edit plan">${svg('edit')}</button><button class="icon-button" data-action="remove" aria-label="Remove ${escape(item.title)}" title="Remove plan">${svg('bin')}</button></div></div></article>`).join('');
+    board.innerHTML = sorted.map(item => `<article class="memory" data-id="${escape(item.id)}"><time class="memory-date"${item.date ? ` datetime="${escape(item.date + (item.time ? 'T' + item.time : ''))}"` : ''}>${dateLabel(item)}</time><div class="memory-card">${item.photoId ? `<img class="memory-photo" src="/api/photos/${escape(item.photoId)}" alt="${escape(item.title)}" loading="lazy" decoding="async">` : `<div class="memory-placeholder">${svg('heart')}<span>A photo of us, soon.</span></div>`}<div class="memory-copy"><div class="memory-title"><h2>${escape(item.title)}</h2><div class="memory-actions"><button class="icon-button" data-action="edit" aria-label="Edit ${escape(item.title)}" title="Edit memory">${svg('edit')}</button><button class="icon-button" data-action="remove" aria-label="Remove ${escape(item.title)}" title="Remove memory">${svg('bin')}</button></div></div>${item.notes ? `<p>${escape(item.notes)}</p>` : ''}</div></div></article>`).join('');
   }
   async function refresh() {
     if (loading) return loading;
     loading = (async () => {
       try { const value = await api('/api/items/list', 'POST', {}); items = value.items; boardError.textContent = ''; render(); }
-      catch (error) { boardError.textContent = error.message; if (!items.length) board.innerHTML = '<div class="empty-message"><p>We couldn’t gather your plans.</p><button class="text-button" data-retry>Try again</button></div>'; }
+      catch (error) { boardError.textContent = error.message; if (!items.length) board.innerHTML = '<div class="empty-message"><p>We couldn’t open your memories.</p><button class="text-button" data-retry>Try again</button></div>'; }
       finally { loading = null; }
     })();
     return loading;
   }
-  async function openForm(type = 'quest', item = null) {
+  function clearPreview() {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    previewUrl = null;
+    photoPreview.removeAttribute('src');
+    photoPreview.hidden = true;
+    photoPrompt.hidden = false;
+    removePhoto.hidden = true;
+  }
+  function showPhoto(source) { photoPreview.src = source; photoPreview.hidden = false; photoPrompt.hidden = true; removePhoto.hidden = false; }
+  function openForm(item = null) {
+    if (saving) return;
+    photoGeneration++;
+    preparing = false;
+    submit.disabled = false;
     editing = item;
     newId = item ? null : crypto.randomUUID();
+    photoId = item?.photoId || null;
+    photoBlob = uploadId = null;
     form.reset();
-    formError.textContent = '';
-    document.querySelector('#dialog-title').textContent = item ? 'A little change of plan.' : 'Make a little plan.';
-    for (const key of ['title', 'type', 'date', 'time', 'place', 'notes']) form.elements[key].value = item ? item[key] || '' : key === 'type' ? type : '';
+    formError.textContent = photoStatus.textContent = '';
+    clearPreview();
+    if (photoId) showPhoto('/api/photos/' + photoId);
+    document.querySelector('#dialog-title').textContent = item ? 'A little edit.' : 'A moment to keep.';
+    for (const key of ['title', 'date', 'time', 'notes']) form.elements[key].value = item ? item[key] || '' : '';
     dialog.showModal();
-    form.elements.title.focus();
   }
+  photoInput.addEventListener('change', async () => {
+    const file = photoInput.files[0];
+    if (!file) return;
+    const generation = ++photoGeneration;
+    preparing = true;
+    submit.disabled = true;
+    formError.textContent = '';
+    photoStatus.textContent = 'Preparing your photo…';
+    try {
+      const prepared = await preparePhoto(file);
+      if (generation !== photoGeneration) return;
+      clearPreview();
+      photoBlob = prepared;
+      photoId = null;
+      uploadId = crypto.randomUUID();
+      previewUrl = URL.createObjectURL(prepared);
+      showPhoto(previewUrl);
+      photoStatus.textContent = 'Photo ready.';
+    } catch (error) { if (generation === photoGeneration) { formError.textContent = error.message; photoStatus.textContent = ''; photoInput.value = ''; } }
+    finally { if (generation === photoGeneration) { preparing = false; submit.disabled = false; } }
+  });
+  removePhoto.addEventListener('click', () => {
+    photoGeneration++;
+    preparing = false;
+    photoId = photoBlob = uploadId = null;
+    photoInput.value = photoStatus.textContent = '';
+    clearPreview();
+    submit.disabled = false;
+  });
   document.addEventListener('click', event => {
-    const add = event.target.closest('[data-add], [data-starter]');
-    if (add) openForm(add.dataset.starter || (category === 'all' ? 'quest' : category));
-    if (event.target.closest('[data-close]')) dialog.close();
+    if (event.target.closest('[data-add]')) openForm();
+    if (event.target.closest('[data-close]') && !saving) dialog.close();
     if (event.target.closest('[data-retry]')) refresh();
   });
-  dialog.addEventListener('click', event => { if (event.target === dialog) { const box = dialog.getBoundingClientRect(); if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) dialog.close(); } });
+  dialog.addEventListener('close', () => { photoGeneration++; });
+  dialog.addEventListener('cancel', event => { if (saving) event.preventDefault(); });
+  dialog.addEventListener('click', event => { if (event.target === dialog && !saving) { const box = dialog.getBoundingClientRect(); if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) dialog.close(); } });
   form.addEventListener('submit', async event => {
     event.preventDefault();
+    if (preparing || saving) return;
     formError.textContent = '';
-    const button = form.querySelector('[type=submit]');
-    const data = Object.fromEntries(new FormData(form));
+    submit.disabled = true;
+    const data = Object.fromEntries(['title', 'date', 'time', 'notes'].map(key => [key, form.elements[key].value]));
     if (editing) data.revision = editing.revision;
     else data.id = newId;
-    button.disabled = true;
+    saving = true;
+    form.setAttribute('aria-busy', 'true');
+    const controls = [...form.querySelectorAll('input, textarea, button')];
+    controls.forEach(control => { control.disabled = true; });
     try {
+      if (photoBlob) { photoStatus.textContent = 'Saving your photo…'; const uploaded = await api('/api/photos/' + uploadId, 'POST', photoBlob); photoId = uploaded.photoId; photoBlob = null; photoStatus.textContent = 'Photo saved.'; }
+      data.photoId = photoId;
       const { item } = await api(editing ? '/api/items/' + editing.id : '/api/items', editing ? 'PATCH' : 'POST', data);
       items = items.filter(previous => previous.id !== item.id).concat(item);
-      if (!editing && status === 'done') { status = 'open'; document.querySelector('#status-filter').value = 'open'; }
-      if (category !== 'all' && category !== item.type) {
-        category = item.type;
-        for (const tab of document.querySelectorAll('[data-filter]')) tab.setAttribute('aria-pressed', String(tab.dataset.filter === category));
-      }
       render();
       dialog.close();
-      notify(editing ? 'Our plan is updated.' : 'A little plan to look forward to.');
+      notify(editing ? 'Memory updated.' : 'A little memory, kept for us.');
     } catch (error) { formError.textContent = error.message; if (error.message.includes('another device') || error.message.includes('already saved')) await refresh(); }
-    finally { button.disabled = false; }
+    finally { saving = false; form.removeAttribute('aria-busy'); controls.forEach(control => { control.disabled = false; }); }
   });
-  for (const filter of document.querySelectorAll('[data-filter]')) filter.addEventListener('click', () => {
-    category = filter.dataset.filter;
-    for (const button of document.querySelectorAll('[data-filter]')) button.setAttribute('aria-pressed', String(button === filter));
-    render();
-  });
-  document.querySelector('#status-filter').addEventListener('change', event => { status = event.target.value; render(); });
   board.addEventListener('click', async event => {
     const button = event.target.closest('[data-action]');
     if (!button) return;
     const item = items.find(item => item.id === button.closest('[data-id]').dataset.id);
     if (!item) return;
-    if (button.dataset.action === 'edit') { await refresh(); return openForm(item.type, items.find(latest => latest.id === item.id) || item); }
+    if (button.dataset.action === 'edit') { await refresh(); return openForm(items.find(latest => latest.id === item.id) || item); }
     button.disabled = true;
     try {
-      if (button.dataset.action === 'complete') {
-        const { item: updated } = await api('/api/items/' + item.id, 'PATCH', { done: !item.done });
-        items = items.map(previous => previous.id === item.id ? updated : previous);
-        render();
-        notify(updated.done ? 'Another memory made together. ♡' : 'Back on our little list.');
-      } else {
-        await api('/api/items/' + item.id, 'DELETE');
-        items = items.filter(previous => previous.id !== item.id);
-        render();
-        notify('Plan removed.', async () => {
-          toastButton.disabled = true;
-          try { const { item: restored } = await api('/api/items/' + item.id + '/restore', 'POST'); items.push(restored); render(); notify('Plan restored.'); }
-          catch (error) { notify(error.message); }
-          finally { toastButton.disabled = false; }
-        });
-      }
+      await api('/api/items/' + item.id, 'DELETE');
+      items = items.filter(previous => previous.id !== item.id);
+      render();
+      notify('Memory removed.', async () => {
+        toastButton.disabled = true;
+        try { const { item: restored } = await api('/api/items/' + item.id + '/restore', 'POST', {}); items.push(restored); render(); notify('Memory restored.'); }
+        catch (error) { notify(error.message); }
+        finally { toastButton.disabled = false; }
+      });
     } catch (error) { boardError.textContent = error.message; button.disabled = false; }
   });
-  document.querySelector('#download').addEventListener('click', () => {
-    const url = URL.createObjectURL(new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), items }, null, 2)], { type: 'application/json' }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'our-little-plans-' + new Date().toISOString().slice(0, 10) + '.json';
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  });
   document.querySelector('#logout').addEventListener('click', async event => {
-    event.currentTarget.disabled = true;
-    try { await api('/auth/logout', 'POST'); location.assign('/'); }
-    catch (error) { boardError.textContent = error.message; event.target.closest('button').disabled = false; }
+    const button = event.currentTarget;
+    button.disabled = true;
+    try { await api('/auth/logout', 'POST', {}); location.assign('/'); }
+    catch (error) { boardError.textContent = error.message; button.disabled = false; }
   });
   window.addEventListener('focus', () => { if (!dialog.open) refresh(); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden && !dialog.open) refresh(); });
