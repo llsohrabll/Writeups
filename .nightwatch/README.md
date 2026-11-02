@@ -9,7 +9,7 @@ pnpm test
 pnpm build
 ```
 
-The homepage displays the writeups list and search. `/writeups/` redirects to that list; existing `/writeups/<slug>/` article URLs remain valid. `/note/` is a simple notebook populated by Markdown files in `notes/`. It starts empty; there are no seeded collections or example articles. The root [posting guide](../Readme.md) explains publishing.
+The homepage displays the writeups list and search. `/writeups/` redirects to that list; existing `/writeups/<slug>/` article URLs remain valid. `/note/` is a simple notebook populated by Markdown files in `notes/`, including editable LLM and OAuth starter posts. Both lists use a two-column grid on larger screens and one column on phones. The root [posting guide](../Readme.md) explains publishing.
 
 `local-repository.mjs` supplies local content for builds and previews. Builds embed the current rendered content so a cold edge can respond immediately. Runtime GitHub refreshes run in the background when a bundled or stale snapshot is available; the edge cache lasts about 10 minutes. A repository-only content edit needs no Worker deployment.
 

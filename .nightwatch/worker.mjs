@@ -1,7 +1,8 @@
 import site_config_default from './site.mjs';
 import { parsePost, renderPost, slugify, escape3 } from './content.mjs';
 import { vulnerabilityIcon } from './vulnerability-icons.mjs';
-import { notebookPage, notebookCss } from './notebook.mjs';
+import { notebookPage, notebookCss, notebookIcon } from './notebook.mjs';
+import { listingCss } from './listing.mjs';
 import { page as layoutPage } from './layout.mjs';
 const __name = (value) => value;
 var SOURCE = { owner: "llsohrabll", repo: "Writeups" };
@@ -196,7 +197,7 @@ async function snapshot(fetcher = fetch, cache = globalThis.caches?.default, ini
   const now = Date.now();
   if (hotSnapshot && hotSnapshot.until > now) return hotSnapshot.value;
   if (!refreshPromise) refreshPromise = (async () => {
-    const cacheKey = new Request(`${site_config_default.url}/__nightwatch_repository_snapshot_v7`);
+    const cacheKey = new Request(`${site_config_default.url}/__nightwatch_repository_snapshot_v8`);
     if (cache) {
       const cached = await cache.match(cacheKey);
       if (cached) {
@@ -231,9 +232,10 @@ __name(tags, "tags");
 function page(...args) { return layoutPage(...args); }
 __name(page, "page");
 function card(post) {
+  const icon = post.section && !post.iconUrl ? `<span class="post-avatar" aria-hidden="true">${notebookIcon}</span>` : vulnerabilityIcon(post);
   const metadata = [...post.date ? [`<time datetime="${escape3(post.date)}">${prettyDate(post.date)}</time>`] : [], `<span>${post.minutes} min read</span>`].join('<span class="meta-divider" aria-hidden="true">\xB7</span>');
   const searchText = [post.title, post.description, post.category, ...post.tags].filter(Boolean).join(" ");
-  return `<a class="post-card" href="${postHref(post)}" data-search="${escape3(searchText)}">${vulnerabilityIcon(post)}<div class="post-copy"><div class="post-meta">${metadata}</div><h3>${escape3(post.title)}</h3>${post.description ? `<p>${escape3(post.description)}</p>` : ""}${tags(post)}</div><span class="read-link">${post.section ? "Read note" : "Read writeup"} <span aria-hidden="true">\u2192</span></span></a>`;
+  return `<a class="post-card" href="${postHref(post)}" data-search="${escape3(searchText)}">${icon}<div class="post-copy"><div class="post-meta">${metadata}</div><h3>${escape3(post.title)}</h3>${post.description ? `<p>${escape3(post.description)}</p>` : ""}${tags(post)}</div><span class="read-link">${post.section ? "Read note" : "Read writeup"} <span aria-hidden="true">\u2192</span></span></a>`;
 }
 __name(card, "card");
 function homepage(posts, showRepository) {
@@ -273,6 +275,7 @@ var index_default = {
     if (/^\/notes\/?$/.test(url.pathname)) return Response.redirect(`${site_config_default.url}/note/`, 308);
     if (url.pathname.startsWith('/notes/') || ['/notes.css', '/llm-visuals.css', '/llm-visuals.js', '/parmis.css', '/parmis.js'].includes(url.pathname)) return respond(notFound(), 410);
     if (url.pathname === '/notebook.css') return new Response(request.method === 'HEAD' ? null : notebookCss, { headers: { ...HEADERS, 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
+    if (url.pathname === '/listing.css') return new Response(request.method === 'HEAD' ? null : listingCss, { headers: { ...HEADERS, 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
     const noteIndex = /^\/note\/?$/.test(url.pathname);
     const noteMatch = url.pathname.match(/^\/note\/([^/]+)\/?$/);
     const articleMatch = url.pathname.match(/^\/writeups\/([^/]+)\/?$/);
