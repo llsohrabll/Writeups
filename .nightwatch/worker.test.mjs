@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { Script } from 'node:vm';
 import { loadRepository } from './worker.mjs';
 
 const commit = 'a'.repeat(40);
@@ -74,6 +75,36 @@ test('a new note publishes under the singular route with an article and notebook
   assert.match(article, /href="\/note\/">.*All notes/);
   assert.match(article, /aria-current="page" href="\/note\/"/);
   assert.equal((await request('/note/my-course-note')).status, 308);
+});
+
+test('the OAuth animation is embedded at the existing note and loads its own assets only there', async () => {
+  const oauth = '---\ntitle: OAuth\nlayout: document\n---\n\n```oauth-animation\n```';
+  const request = await freshWorker({ 'notes/oauth.md': oauth, 'notes/llm.md': note, 'posts/existing.md': writeup });
+  const html = await (await request('/note/oauth/')).text();
+  assert.match(html, /data-oauth-player/);
+  assert.match(html, /document-reading/);
+  assert.match(html, /src="\/oauth-player.js\?v=/);
+  assert.match(html, /href="\/oauth-player.css\?v=/);
+  assert.doesNotMatch(html, /<iframe|Field guide|Knowledge check|OAuth Playground/);
+  for (const path of ['/', '/note/', '/note/llm/', '/writeups/existing/']) assert.doesNotMatch(await (await request(path)).text(), /oauth-player\.(js|css)/);
+  const css = await request('/oauth-player.css');
+  assert.match(css.headers.get('Content-Type'), /text\/css/);
+  const script = await request('/oauth-player.js');
+  assert.match(script.headers.get('Content-Type'), /application\/javascript/);
+  const source = await script.text();
+  assert.doesNotThrow(() => new Script(source));
+  assert.doesNotMatch(source, /fetch\(|XMLHttpRequest|localStorage/);
+  for (const path of ['/oauth-player.css', '/oauth-player.js', '/note/oauth/']) assert.equal(await (await request(path, 'HEAD')).text(), '');
+});
+
+test('the animation marker cannot turn arbitrary Markdown or HTML into executable content', async () => {
+  const marker = '```oauth-animation\n```\n\n<script>alert(1)</script>';
+  const result = await loadRepository(fixture({ 'posts/oauth.md': marker, 'notes/another.md': marker, 'notes/oauth.md': marker }));
+  assert.doesNotMatch(result.posts[0].html, /data-oauth-player|<script>/);
+  assert.doesNotMatch(result.notes.find(item => item.slug === 'another').html, /data-oauth-player|<script>/);
+  const rendered = result.notes.find(item => item.slug === 'oauth').html;
+  assert.match(rendered, /data-oauth-player/);
+  assert.doesNotMatch(rendered, /<script>/);
 });
 
 test('legacy index URLs redirect and removed collections and interactive assets are gone', async () => {

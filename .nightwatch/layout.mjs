@@ -2,6 +2,7 @@ import site from './site.mjs';
 import { escape3 as escapeHtml } from './content.mjs';
 import { notebookCss } from './notebook.mjs';
 import { listingCss } from './listing.mjs';
+import { oauthPlayerVersion } from './oauth-player.mjs';
 
 const notebookVersion = [...notebookCss].reduce((hash, c) => (Math.imul(31, hash) + c.charCodeAt(0)) | 0, 0).toString(36);
 const listingVersion = [...listingCss].reduce((hash, c) => (Math.imul(31, hash) + c.charCodeAt(0)) | 0, 0).toString(36);
@@ -9,6 +10,7 @@ const listingVersion = [...listingCss].reduce((hash, c) => (Math.imul(31, hash) 
 export function page(title, description, route, body, author = site.author, showRepository = false) {
   const notes = route.startsWith('/note/');
   const listing = route === '/' || route === '/note/';
+  const oauthAnimation = route === '/note/oauth/' && body.includes('data-oauth-player');
   const article = /^\/writeups\/[^/]+\/$/.test(route) || /^\/note\/[^/]+\/$/.test(route);
   const canonical = escapeHtml(site.url + route);
   const navLink = (href, label, current) => `<a${current ? ' class="nav-current" aria-current="page"' : ''} href="${href}">${label}</a>`;
@@ -21,7 +23,9 @@ export function page(title, description, route, body, author = site.author, show
 <meta property="og:title" content="${escapeHtml(title)}"><meta property="og:description" content="${escapeHtml(description)}"><meta property="og:url" content="${canonical}">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"><script src="/theme.js"></script>
 ${route === '/' ? '<script type="module" src="/search.js"></script>' : ''}
+${oauthAnimation ? `<script defer src="/oauth-player.js?v=${oauthPlayerVersion.js}"></script>` : ''}
 <link rel="stylesheet" href="/site.css">${listing ? `<link rel="stylesheet" href="/listing.css?v=${listingVersion}">` : ''}${notes ? `<link rel="stylesheet" href="/notebook.css?v=${notebookVersion}">` : ''}
+${oauthAnimation ? `<link rel="stylesheet" href="/oauth-player.css?v=${oauthPlayerVersion.css}">` : ''}
 
 </head><body id="top"><a class="skip" href="#main">Skip to content</a>
 <header class="site-header"><div class="wrap header-inner"><a class="brand" href="/" aria-label="Nightwatch home"><img class="brand-mark" src="/favicon.svg" alt="" width="32" height="32">Nightwatch</a>

@@ -1,5 +1,6 @@
 import lib_default from 'markdown-it';
 import { parseDocument } from 'yaml';
+import { oauthPlayerHtml } from './oauth-player.mjs';
 const __name = (value) => value;
 var escape3 = /* @__PURE__ */ __name((value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]), "escape");
 function slugify(value) {
@@ -37,6 +38,10 @@ function parsePost(source, file) {
 __name(parsePost, "parsePost");
 function renderPost(post, resolveLocal2) {
   const md = new lib_default({ html: false, linkify: true, typographer: true });
+  const defaultFence = md.renderer.rules.fence;
+  md.renderer.rules.fence = (tokens, index, options, env, self) => post.file === 'notes/oauth.md' && tokens[index].info.trim() === 'oauth-animation' && !tokens[index].content.trim()
+    ? oauthPlayerHtml
+    : defaultFence(tokens, index, options, env, self);
   const toc = [];
   const used = /* @__PURE__ */ new Set();
   md.core.ruler.push("nightwatch", (state) => {

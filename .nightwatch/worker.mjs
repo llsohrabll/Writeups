@@ -3,6 +3,7 @@ import { parsePost, renderPost, slugify, escape3 } from './content.mjs';
 import { vulnerabilityIcon } from './vulnerability-icons.mjs';
 import { notebookPage, notebookCss, notebookIcon } from './notebook.mjs';
 import { listingCss } from './listing.mjs';
+import { oauthPlayerCss, oauthPlayerScript } from './oauth-player.mjs';
 import { page as layoutPage } from './layout.mjs';
 const __name = (value) => value;
 var SOURCE = { owner: "llsohrabll", repo: "Writeups" };
@@ -197,7 +198,7 @@ async function snapshot(fetcher = fetch, cache = globalThis.caches?.default, ini
   const now = Date.now();
   if (hotSnapshot && hotSnapshot.until > now) return hotSnapshot.value;
   if (!refreshPromise) refreshPromise = (async () => {
-    const cacheKey = new Request(`${site_config_default.url}/__nightwatch_repository_snapshot_v8`);
+    const cacheKey = new Request(`${site_config_default.url}/__nightwatch_repository_snapshot_v9`);
     if (cache) {
       const cached = await cache.match(cacheKey);
       if (cached) {
@@ -281,6 +282,10 @@ var index_default = {
     if (url.pathname.startsWith('/notes/') || ['/notes.css', '/llm-visuals.css', '/llm-visuals.js', '/parmis.css', '/parmis.js'].includes(url.pathname)) return respond(notFound(), 410);
     if (url.pathname === '/notebook.css') return new Response(request.method === 'HEAD' ? null : notebookCss, { headers: { ...HEADERS, 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
     if (url.pathname === '/listing.css') return new Response(request.method === 'HEAD' ? null : listingCss, { headers: { ...HEADERS, 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
+    if (url.pathname === '/oauth-player.css' || url.pathname === '/oauth-player.js') {
+      const script = url.pathname.endsWith('.js');
+      return new Response(request.method === 'HEAD' ? null : script ? oauthPlayerScript : oauthPlayerCss, { headers: { ...HEADERS, 'Content-Type': script ? 'application/javascript; charset=utf-8' : 'text/css; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
+    }
     const noteIndex = /^\/note\/?$/.test(url.pathname);
     const noteMatch = url.pathname.match(/^\/note\/([^/]+)\/?$/);
     const articleMatch = url.pathname.match(/^\/writeups\/([^/]+)\/?$/);

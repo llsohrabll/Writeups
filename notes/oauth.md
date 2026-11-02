@@ -1,9 +1,9 @@
 ---
 title: "OAuth"
-description: "My notes on OAuth."
+description: "Animated OAuth and OpenID Connect flows, attacks, and defenses."
 date: "2026-11-02"
+layout: document
 ---
 
-## Notes
-
-Add your OAuth notes here.
+```oauth-animation
+```
