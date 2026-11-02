@@ -1,14 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { loadRepository } from './worker.mjs';
 
 const commit = 'a'.repeat(40);
 const tree = 'b'.repeat(40);
-const writeup = '---\ntitle: "Existing writeup"\n---\n\n## Findings\n\nA writeup.';
-const note = '---\ntitle: "Prompt injection notes"\ntags: [llm]\n---\n\n## Key ideas\n\nA course note.';
-
+const writeup = '---\ntitle: "Existing writeup"\ndate: "2026-09-24"\ntags: [xss]\n---\n\n## Findings\n\nA writeup.';
+const note = '---\ntitle: "My course note"\ndate: "2026-11-02"\n---\n\n## Key ideas\n\nA note.';
 function fixture(files) {
-  return async (input) => {
+  return async input => {
     const url = String(input);
     if (url === 'https://api.github.com/repos/llsohrabll/Writeups') return Response.json({ default_branch: 'main', private: false });
     if (url.endsWith('/branches/main')) return Response.json({ commit: { sha: commit, commit: { tree: { sha: tree } } } });
@@ -21,177 +21,115 @@ function fixture(files) {
     throw new Error(`Unexpected fetch: ${url}`);
   };
 }
-
 async function freshWorker(files) {
   const { default: worker } = await import(`./worker.mjs?test=${crypto.randomUUID()}`);
   const env = { FETCH: fixture(files), ASSETS: { fetch: () => new Response('asset', { status: 404 }) } };
   return (path, method = 'GET') => worker.fetch(new Request(`https://nightwatch.team${path}`, { method }), env);
 }
 
-test('notes stay out of writeups, docs and hidden files stay out of both', async () => {
+test('home renders writeups and search while notes remain in the notebook', async () => {
+  const request = await freshWorker({ 'posts/existing.md': writeup, 'notes/my-course-note.md': note });
+  const home = await (await request('/')).text();
+  assert.match(home, /class="post-card" href="\/writeups\/existing\/"/);
+  assert.match(home, /data-writeup-search/);
+  assert.match(home, /src="\/search.js"/);
+  assert.doesNotMatch(home, /My course note|home-section-button|LLM Attacks|llm-visuals|notes.css/);
+  assert.match(home, /href="\/note\/">Notes/);
+});
+
+test('the empty notebook has a UI and links to a Markdown template and guide', async () => {
+  const request = await freshWorker({ 'notes/README.md': '# Documentation', 'posts/existing.md': writeup });
+  const response = await request('/note/');
+  const html = await response.text();
+  assert.equal(response.status, 200);
+  assert.match(html, /A fresh page/);
+  assert.match(html, /No notes published yet/);
+  assert.match(html, /Writeups\/new\/main\/notes\?filename=my-first-note.md/);
+  assert.match(html, /blob\/main\/Readme.md/);
+  assert.doesNotMatch(html, /LLM Attacks|Collections|class="post-card"/);
+});
+
+test('a new note publishes under the singular route with an article and notebook navigation', async () => {
+  const request = await freshWorker({ 'notes/my-course-note.md': note });
+  assert.match(await (await request('/note/')).text(), /href="\/note\/my-course-note\/"/);
+  const article = await (await request('/note/my-course-note/')).text();
+  assert.match(article, /My course note/);
+  assert.match(article, /id="key-ideas"/);
+  assert.match(article, /href="\/note\/">.*All notes/);
+  assert.match(article, /aria-current="page" href="\/note\/"/);
+  assert.equal((await request('/note/my-course-note')).status, 308);
+});
+
+test('legacy index URLs redirect and removed collections and interactive assets are gone', async () => {
+  const request = await freshWorker({});
+  for (const path of ['/writeups', '/writeups/']) assert.equal((await request(path)).headers.get('Location'), 'https://nightwatch.team/#writeups');
+  assert.equal((await request('/notes/')).headers.get('Location'), 'https://nightwatch.team/note/');
+  assert.equal((await request('/note')).headers.get('Location'), 'https://nightwatch.team/note/');
+  for (const path of ['/notes/llm-attacks/', '/notes/llm-attacks/how-llm-apis-work/', '/notes.css', '/llm-visuals.css', '/llm-visuals.js']) assert.equal((await request(path)).status, 410);
+});
+
+test('drafts and documentation stay unpublished; notes and writeups can share a slug', async () => {
   const result = await loadRepository(fixture({
-    'posts/existing.md': writeup,
-    'notes/llm-attacks/injection.md': note,
-    'Readme.md': '# Docs',
-    'notes/README.md': '# Docs',
-    'notes/llm-attacks/README.md': '# Docs',
-    '.nightwatch/README.md': '# Worker docs',
-    'notes/llm-attacks/.template.md': '# Hidden',
+    'posts/lesson.md': writeup,
+    'notes/lesson.md': note,
+    'notes/draft.md': '---\ntitle: Draft\ndraft: true\n---\n\nDraft',
+    'Readme.md': '# Guide', 'notes/README.md': '# Guide', '.nightwatch/README.md': '# Source', '.together/README.md': '# Source',
   }));
   assert.equal(result.posts.length, 1);
   assert.equal(result.notes.length, 1);
-  assert.equal(result.notes[0].section, 'llm-attacks');
-  assert.equal(result.notes[0].slug, 'injection');
-  assert.match(result.notes[0].html, /id="key-ideas"/);
+  assert.equal(result.notes[0].slug, 'lesson');
+  await assert.rejects(loadRepository(fixture({ 'notes/one.md': note, 'notes/two.md': '---\nslug: one\n---\n\nDuplicate' })), /Duplicate content URL/);
 });
 
-test('draft notes are not published', async () => {
-  const result = await loadRepository(fixture({ 'notes/llm-attacks/draft.md': '---\ntitle: "Draft"\ndraft: true\n---\n\nDraft text.' }));
-  assert.equal(result.notes.length, 0);
-});
-
-test('relative links resolve between notes and writeups, images use pinned commits', async () => {
+test('relative article links and images resolve; HTML is escaped and missing attachments fail', async () => {
   const result = await loadRepository(fixture({
-    'posts/existing.md': writeup + '\n\n[Course note](../notes/llm-attacks/injection.md#key-ideas)',
-    'notes/llm-attacks/injection.md': note + '\n\n[Research](../../posts/existing.md)\n\n![Diagram](../../images/diagram.svg)',
-    'images/diagram.svg': '<svg/>',
+    'posts/existing.md': writeup + '\n\n[Note](../notes/lesson.md#key-ideas)\n\n<script>alert(1)</script>',
+    'notes/lesson.md': note + '\n\n[Writeup](../posts/existing.md)\n\n![Image](../images/demo.svg)',
+    'images/demo.svg': '<svg/>',
   }));
-  assert.match(result.posts[0].html, /href="\/notes\/llm-attacks\/injection\/#key-ideas"/);
+  assert.match(result.posts[0].html, /href="\/note\/lesson\/#key-ideas"/);
+  assert.doesNotMatch(result.posts[0].html, /<script>/);
   assert.match(result.notes[0].html, /href="\/writeups\/existing\/"/);
-  assert.match(result.notes[0].html, new RegExp(`raw.githubusercontent.com/llsohrabll/Writeups/${commit}/images/diagram.svg`));
+  assert.match(result.notes[0].html, new RegExp(`raw.githubusercontent.com/llsohrabll/Writeups/${commit}/images/demo.svg`));
+  await assert.rejects(loadRepository(fixture({ 'posts/missing.md': writeup + '\n\n![Missing](none.png)' })), /missing attachment/);
 });
 
-test('same slug can exist in different collections but not twice in one', async () => {
-  const files = { 'notes/llm-attacks/lesson.md': note, 'notes/security-class/lesson.md': note };
-  assert.equal((await loadRepository(fixture(files))).notes.length, 2);
-  await assert.rejects(loadRepository(fixture({ ...files, 'notes/llm-attacks/second.md': '---\nslug: lesson\n---\n\nDuplicate' })), /Duplicate content URL/);
-});
-
-test('Markdown escapes HTML and rejects links to drafts or missing attachments', async () => {
-  const result = await loadRepository(fixture({ 'notes/llm-attacks/injection.md': note + '\n\n<script>alert(1)</script>' }));
-  assert.doesNotMatch(result.notes[0].html, /<script>/);
-  await assert.rejects(loadRepository(fixture({ 'notes/llm-attacks/injection.md': note + '\n\n![Missing](missing.png)' })), /missing attachment/);
-});
-
-test('notes index and empty LLM collection provide working GitHub creation links', async () => {
-  const request = await freshWorker({ 'posts/existing.md': writeup });
-  const index = await request('/notes/');
-  assert.equal(index.status, 200);
-  assert.match(await index.text(), /href="\/notes\/llm-attacks\/"/);
-  const topic = await request('/notes/llm-attacks/');
-  const html = await topic.text();
-  assert.equal(topic.status, 200);
-  assert.match(html, /A fresh page/);
-  assert.match(html, /Writeups\/new\/main\/notes\/llm-attacks\?filename=my-note.md/);
-  assert.match(html, /value=---/);
-});
-
-test('published note has collection navigation, table of contents, and GitHub edit link', async () => {
-  const request = await freshWorker({ 'notes/llm-attacks/injection.md': note });
-  const response = await request('/notes/llm-attacks/injection/');
-  const html = await response.text();
-  assert.equal(response.status, 200);
-  assert.match(html, /Prompt injection notes/);
-  assert.match(html, /href="#key-ideas"/);
-  assert.match(html, /Writeups\/edit\/main\/notes\/llm-attacks\/injection.md/);
-  assert.match(html, /aria-current="page" href="\/notes\/"/);
-});
-
-test('new topic folders become collections automatically', async () => {
-  const request = await freshWorker({ 'notes/security-class/lesson.md': note });
-  const index = await request('/notes/');
-  assert.match(await index.text(), /Security Class/);
-  assert.equal((await request('/notes/security-class/')).status, 200);
-});
-
-test('notes routes canonicalize, unknown notes return 404, and assets still pass through', async () => {
-  const request = await freshWorker({});
-  const redirect = await request('/notes?source=test');
-  assert.equal(redirect.status, 308);
-  assert.equal(redirect.headers.get('Location'), 'https://nightwatch.team/notes/?source=test');
-  assert.equal((await request('/notes/unknown/')).status, 404);
-  assert.equal((await request('/notes/llm-attacks/missing/')).status, 404);
-  assert.equal(await (await request('/favicon.svg')).text(), 'asset');
-});
-
-test('HEAD responses omit bodies, CSS and icon use the correct content types', async () => {
-  const request = await freshWorker({});
-  assert.equal(await (await request('/notes/', 'HEAD')).text(), '');
-  const css = await request('/notes.css');
-  assert.match(css.headers.get('Content-Type'), /text\/css/);
-  const icon = await request('/notes/llm.svg');
-  assert.match(icon.headers.get('Content-Type'), /image\/svg\+xml/);
-  assert.equal((await request('/notes/', 'POST')).status, 405);
-});
-
-test('sitemap includes collections, published notes and existing writeups', async () => {
-  const request = await freshWorker({ 'posts/existing.md': writeup, 'notes/llm-attacks/injection.md': note });
+test('sitemap contains home, notebook and published articles without legacy collections', async () => {
+  const request = await freshWorker({ 'posts/existing.md': writeup, 'notes/lesson.md': note });
   const xml = await (await request('/sitemap.xml')).text();
-  for (const path of ['/notes/', '/notes/llm-attacks/', '/notes/llm-attacks/injection/', '/writeups/existing/']) assert.ok(xml.includes(`https://nightwatch.team${path}`));
+  for (const route of ['/', '/note/', '/writeups/existing/', '/note/lesson/']) assert.ok(xml.includes(`<loc>https://nightwatch.team${route}</loc>`));
+  assert.doesNotMatch(xml, /\/notes\/|llm-attacks|<loc>https:\/\/nightwatch.team\/writeups\/<\/loc>/);
 });
 
-test('homepage offers two section buttons without a writeups list or search', async () => {
-  const request = await freshWorker({ 'posts/existing.md': writeup, 'notes/llm-attacks/injection.md': note });
-  const home = await (await request('/')).text();
-  assert.match(home, /class="home-section-button" href="\/writeups\/"/);
-  assert.match(home, /class="home-section-button" href="\/notes\/"/);
-  assert.match(home, /aria-label="Explore Nightwatch"/);
-  assert.doesNotMatch(home, /class="post-card"|class="social-links"|data-writeup-search/);
-  assert.doesNotMatch(home, /href="\/writeups\/existing\/"/);
-  assert.doesNotMatch(home, /src="\/search.js"/);
-  assert.doesNotMatch(home, /home-hub/);
-  assert.doesNotMatch(home, /Prompt injection notes/);
-  assert.match(home, /href="\/notes\/"/);
-  assert.equal((await request('/writeups/existing/')).status, 200);
+test('HEAD, asset fallback, empty homepage, unknown articles and method handling remain correct', async () => {
+  const request = await freshWorker({});
+  for (const route of ['/', '/note/', '/notebook.css', '/sitemap.xml']) assert.equal(await (await request(route, 'HEAD')).text(), '');
+  assert.match((await request('/notebook.css')).headers.get('Content-Type'), /text\/css/);
+  assert.equal(await (await request('/favicon.svg')).text(), 'asset');
+  assert.equal((await request('/writeups/missing/')).status, 404);
+  assert.equal((await request('/note/missing/')).status, 404);
+  assert.equal((await request('/', 'POST')).status, 405);
+  assert.match(await (await request('/')).text(), /No writeups yet/);
 });
 
-test('dedicated writeups archive retains search and excludes learning notes', async () => {
-  const request = await freshWorker({ 'posts/existing.md': writeup, 'notes/llm-attacks/injection.md': note });
-  assert.equal((await request('/writeups')).status, 308);
-  const response = await request('/writeups/');
-  const html = await response.text();
+test('cold requests serve the bundled content while the repository refreshes in the background', async () => {
+  const files = { 'posts/existing.md': writeup };
+  const initial = await loadRepository(fixture(files));
+  let release;
+  const gate = new Promise(resolve => { release = resolve; });
+  const { default: worker } = await import(`./worker.mjs?test=${crypto.randomUUID()}`);
+  const jobs = [];
+  const env = { INITIAL_SNAPSHOT: initial, FETCH: async input => { await gate; return fixture(files)(input); } };
+  const response = await worker.fetch(new Request('https://nightwatch.team/'), env, { waitUntil: promise => jobs.push(promise) });
   assert.equal(response.status, 200);
-  assert.match(html, /href="\/writeups\/existing\/"/);
-  assert.match(html, /src="\/search.js"/);
-  assert.match(html, /data-writeup-search/);
-  assert.doesNotMatch(html, /Prompt injection notes/);
+  assert.match(await response.text(), /Existing writeup/);
+  assert.equal(jobs.length, 1);
+  release();
+  await Promise.all(jobs);
 });
 
-test('registered visualization fences render interactive HTML without enabling raw HTML', async () => {
-  const request = await freshWorker({ 'notes/llm-attacks/flow.md': note + '\n\n```llm-flow\n```\n\n```llm-checkpoint\n```\n\n```llm-sequence\n```\n\n<script>alert(1)</script>' });
-  const html = await (await request('/notes/llm-attacks/flow/')).text();
-  assert.match(html, /data-llm-flow/);
-  assert.match(html, /data-llm-checkpoint/);
-  assert.match(html, /data-llm-sequence/);
-  assert.match(html, /id="portswigger-flow"/);
-  assert.match(html, /Who communicates with whom/);
-  assert.match(html, /src="\/llm-visuals.js\?v=/);
-  assert.match(html, /href="\/llm-visuals.css\?v=/);
-  assert.doesNotMatch(html, /<script>alert/);
-  assert.match((await request('/llm-visuals.js')).headers.get('Content-Type'), /text\/javascript/);
-});
-
-test('original flow palette and interactive sequence assets are preserved', async () => {
-  const { llmVisualsCss, llmVisualsJs } = await import('./llm-visuals.mjs');
-  for (const color of ['#75b8ff', '#55d9bf', '#c3a3ff', '#ffc17d', '#ff9e9b']) assert.ok(llmVisualsCss.includes(color));
-  assert.match(llmVisualsJs, /ps-mode-attack/);
-  assert.match(llmVisualsJs, /data-seq-mode/);
-  const { Script } = await import('node:vm');
-  assert.doesNotThrow(() => new Script(llmVisualsJs));
-});
-
-test('published learning note contains no shared conversation attribution or links', async () => {
-  const { readFile } = await import('node:fs/promises');
-  const source = await readFile(new URL('../notes/llm-attacks/how-llm-apis-work.md', import.meta.url), 'utf8');
-  assert.doesNotMatch(source, /chatgpt\.com\/share|Study notes adapted|original study conversation/i);
-  assert.match(source, /Sequence diagram — who communicates with whom/);
-});
-
-test('illustrated policy denies forged authority and gates exact-action approval', async () => {
-  const { evaluateDemoCall, demoCalls } = await import('./llm-visuals.mjs');
-  assert.equal(evaluateDemoCall(demoCalls.read, { workflow: 'summary', approved: false }).allowed, true);
-  assert.equal(evaluateDemoCall(demoCalls.self, { workflow: 'summary', approved: true }).allowed, false);
-  assert.equal(evaluateDemoCall(demoCalls.forged, { workflow: 'email', approved: true }).allowed, false);
-  assert.equal(evaluateDemoCall(demoCalls.self, { workflow: 'email', approved: false }).allowed, false);
-  assert.equal(evaluateDemoCall(demoCalls.self, { workflow: 'email', approved: true }).allowed, true);
+test('the posting guide is short and teaches notes, writeups, images, and drafts', async () => {
+  const guide = await readFile(new URL('../Readme.md', import.meta.url), 'utf8');
+  assert.ok(guide.split('\n').length < 65);
+  for (const text of ['notes/my-first-note.md', 'posts/my-writeup.md', 'draft: true', '../images/my-photo.png', '/note/']) assert.ok(guide.includes(text));
 });
