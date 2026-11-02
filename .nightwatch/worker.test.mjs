@@ -37,6 +37,22 @@ test('home renders writeups and search while notes remain in the notebook', asyn
   assert.match(home, /href="\/note\/">Notes/);
 });
 
+test('the Welcome introduction moves to a sidebar without becoming a searchable writeup', async () => {
+  const welcome = '---\ntitle: "Welcome to Nightwatch"\nicon: "icons/Profile.jpg"\n---\n\nHi, I’m Sohrab.\n\nThanks for stopping by.';
+  const request = await freshWorker({ 'posts/welcome.md': welcome, 'posts/existing.md': writeup, 'icons/Profile.jpg': 'photo' });
+  const home = await (await request('/')).text();
+  const sidebar = home.match(/<aside class="welcome-sidebar"[\s\S]*?<\/aside>/)?.[0];
+  assert.ok(sidebar);
+  assert.match(sidebar, /id="welcome-title">Welcome to Nightwatch/);
+  assert.match(sidebar, /Hi, I’m Sohrab/);
+  assert.match(sidebar, /class="welcome-portrait"/);
+  assert.match(sidebar, /href="\/writeups\/welcome\/"/);
+  assert.doesNotMatch(sidebar, /post-card|data-search=/);
+  assert.equal((home.match(/class="post-card"/g) || []).length, 1);
+  assert.match(await (await request('/writeups/welcome/')).text(), /Thanks for stopping by/);
+  assert.match(await (await request('/sitemap.xml')).text(), /\/writeups\/welcome\//);
+});
+
 test('the empty notebook has a UI and links to a Markdown template and guide', async () => {
   const request = await freshWorker({ 'notes/README.md': '# Documentation', 'posts/existing.md': writeup });
   const response = await request('/note/');
