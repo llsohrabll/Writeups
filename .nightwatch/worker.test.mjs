@@ -85,6 +85,8 @@ test('the OAuth animation is embedded at the existing note and loads its own ass
   assert.match(html, /document-reading/);
   assert.match(html, /src="\/oauth-player.js\?v=/);
   assert.match(html, /href="\/oauth-player.css\?v=/);
+  assert.equal((html.match(/data-lesson="/g) || []).length, 14);
+  assert.doesNotMatch(html, /Choose a flow|oauth-lesson-select/);
   assert.doesNotMatch(html, /<iframe|Field guide|Knowledge check|OAuth Playground/);
   for (const path of ['/', '/note/', '/note/llm/', '/writeups/existing/']) assert.doesNotMatch(await (await request(path)).text(), /oauth-player\.(js|css)/);
   const css = await request('/oauth-player.css');

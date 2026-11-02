@@ -136,10 +136,9 @@ export function initOAuthPlayer(LESSONS) {
     const lesson = LESSONS.find(item => item.id === id);
     if (!lesson) return;
     stop(); current = lesson; index = 0; $('secure').checked = false;
-    $('lesson-select').value = id;
+    showLessonGroup(current.type === 'attack' ? 'attacks' : 'flows');
+    for (const button of root.querySelectorAll('[data-lesson]')) button.setAttribute('aria-pressed', String(button.dataset.lesson === id));
     $('lesson-title').textContent = current.title; $('lesson-summary').textContent = current.summary;
-    $('lesson-kind').textContent = current.type === 'attack' ? 'Attack walkthrough' : 'Protocol flow';
-    $('lesson-kind').dataset.kind = current.type;
     $('context').textContent = current.context; $('mechanism').textContent = current.mechanism; $('takeaway').textContent = current.takeaway;
     $('defense-title').textContent = current.defenseTitle; $('defense-text').textContent = current.defense; $('invariant').textContent = current.invariant;
     $('defense-control').hidden = current.type !== 'attack';
@@ -171,11 +170,19 @@ export function initOAuthPlayer(LESSONS) {
       $('inspect-' + tab.dataset.tab).hidden = !active;
     }
   }
+  function showLessonGroup(name) {
+    for (const button of root.querySelectorAll('[data-lesson-group]')) {
+      const active = button.dataset.lessonGroup === name;
+      button.setAttribute('aria-selected', String(active)); button.tabIndex = active ? 0 : -1;
+      $('lessons-' + button.dataset.lessonGroup).hidden = !active;
+    }
+  }
   root.addEventListener('click', event => {
+    const category = event.target.closest('[data-lesson-group]'); if (category) showLessonGroup(category.dataset.lessonGroup);
+    const lesson = event.target.closest('[data-lesson]'); if (lesson) loadLesson(lesson.dataset.lesson);
     const tab = event.target.closest('[data-tab]'); if (tab) showTab(tab.dataset.tab);
     const step = event.target.closest('[data-step]'); if (step && !step.disabled) jump(step.dataset.step);
   });
-  $('lesson-select').addEventListener('change', event => loadLesson(event.target.value));
   $('play').addEventListener('click', togglePlay);
   $('next').addEventListener('click', () => jump(index + 1)); $('previous').addEventListener('click', () => jump(index - 1));
   $('restart').addEventListener('click', () => jump(0)); $('scrub').addEventListener('input', event => jump(event.target.value));
@@ -192,6 +199,12 @@ export function initOAuthPlayer(LESSONS) {
   });
   root.addEventListener('keydown', event => {
     if (event.target.matches('input,textarea,select') || event.ctrlKey || event.metaKey || event.altKey) return;
+    const category = event.target.closest('[data-lesson-group]');
+    if (category && ['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
+      event.preventDefault();
+      const name = event.key === 'Home' ? 'flows' : event.key === 'End' ? 'attacks' : category.dataset.lessonGroup === 'flows' ? 'attacks' : 'flows';
+      showLessonGroup(name); $('category-' + name).focus(); return;
+    }
     const tab = event.target.closest('[data-tab]');
     if (tab && ['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
       event.preventDefault();
