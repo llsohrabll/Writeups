@@ -9,7 +9,7 @@ const listingVersion = [...listingCss].reduce((hash, c) => (Math.imul(31, hash) 
 
 export function page(title, description, route, body, author = site.author, showRepository = false) {
   const notes = route.startsWith('/note/');
-  const listing = route === '/' || route === '/note/';
+  const listing = route === '/';
   const oauthAnimation = route === '/note/oauth/' && body.includes('data-oauth-player');
   const article = /^\/writeups\/[^/]+\/$/.test(route) || /^\/note\/[^/]+\/$/.test(route);
   const canonical = escapeHtml(site.url + route);

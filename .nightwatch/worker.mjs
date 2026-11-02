@@ -297,7 +297,7 @@ var index_default = {
     try {
       const { posts, notes = [], status } = await snapshot(env.FETCH || fetch, env.CACHE, env.INITIAL_SNAPSHOT, ctx);
       if (url.pathname === '/') return respond(homepage(posts, status === 'ready'));
-      if (noteIndex) return respond(notebookPage(notes, page, card));
+      if (noteIndex) return respond(notebookPage(notes, page));
       if (noteMatch) {
         const note = notes.find(item => encodeURIComponent(item.slug) === noteMatch[1]);
         return note ? respond(article(note)) : respond(notFound(), 404);
