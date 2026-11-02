@@ -4,6 +4,7 @@ import { vulnerabilityIcon } from './vulnerability-icons.mjs';
 import { notebookPage, notebookCss, notebookIcon } from './notebook.mjs';
 import { listingCss } from './listing.mjs';
 import { oauthPlayerCss, oauthPlayerScript } from './oauth-player.mjs';
+import { llmPlayerCss, llmPlayerScript } from './llm-player.mjs';
 import { page as layoutPage } from './layout.mjs';
 const __name = (value) => value;
 var SOURCE = { owner: "llsohrabll", repo: "Writeups" };
@@ -198,7 +199,7 @@ async function snapshot(fetcher = fetch, cache = globalThis.caches?.default, ini
   const now = Date.now();
   if (hotSnapshot && hotSnapshot.until > now) return hotSnapshot.value;
   if (!refreshPromise) refreshPromise = (async () => {
-    const cacheKey = new Request(`${site_config_default.url}/__nightwatch_repository_snapshot_v10`);
+    const cacheKey = new Request(`${site_config_default.url}/__nightwatch_repository_snapshot_v11`);
     if (cache) {
       const cached = await cache.match(cacheKey);
       if (cached) {
@@ -285,6 +286,10 @@ var index_default = {
     if (url.pathname === '/oauth-player.css' || url.pathname === '/oauth-player.js') {
       const script = url.pathname.endsWith('.js');
       return new Response(request.method === 'HEAD' ? null : script ? oauthPlayerScript : oauthPlayerCss, { headers: { ...HEADERS, 'Content-Type': script ? 'application/javascript; charset=utf-8' : 'text/css; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
+    }
+    if (url.pathname === '/llm-player.css' || url.pathname === '/llm-player.js') {
+      const script = url.pathname.endsWith('.js');
+      return new Response(request.method === 'HEAD' ? null : script ? llmPlayerScript : llmPlayerCss, { headers: { ...HEADERS, 'Content-Type': script ? 'application/javascript; charset=utf-8' : 'text/css; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
     }
     const noteIndex = /^\/note\/?$/.test(url.pathname);
     const noteMatch = url.pathname.match(/^\/note\/([^/]+)\/?$/);

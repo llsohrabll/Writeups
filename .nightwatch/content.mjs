@@ -1,6 +1,7 @@
 import lib_default from 'markdown-it';
 import { parseDocument } from 'yaml';
 import { oauthPlayerHtml } from './oauth-player.mjs';
+import { llmPlayerHtml } from './llm-player.mjs';
 const __name = (value) => value;
 var escape3 = /* @__PURE__ */ __name((value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]), "escape");
 function slugify(value) {
@@ -39,9 +40,14 @@ __name(parsePost, "parsePost");
 function renderPost(post, resolveLocal2) {
   const md = new lib_default({ html: false, linkify: true, typographer: true });
   const defaultFence = md.renderer.rules.fence;
-  md.renderer.rules.fence = (tokens, index, options, env, self) => post.file === 'notes/oauth.md' && tokens[index].info.trim() === 'oauth-animation' && !tokens[index].content.trim()
-    ? oauthPlayerHtml
-    : defaultFence(tokens, index, options, env, self);
+  md.renderer.rules.fence = (tokens, index, options, env, self) => {
+    const type = tokens[index].info.trim();
+    if (!tokens[index].content.trim()) {
+      if (post.file === 'notes/oauth.md' && type === 'oauth-animation') return oauthPlayerHtml;
+      if (post.file === 'notes/llm.md' && type === 'llm-animation') return llmPlayerHtml;
+    }
+    return defaultFence(tokens, index, options, env, self);
+  };
   const toc = [];
   const used = /* @__PURE__ */ new Set();
   md.core.ruler.push("nightwatch", (state) => {

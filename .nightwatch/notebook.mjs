@@ -7,7 +7,7 @@ export const notebookIcon = '<svg viewBox="0 0 24 24" width="28" height="28" fil
 const llmIcon = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4H7a4 4 0 0 0-4 4v7a4 4 0 0 0 4 4h1v3l4-3h5a4 4 0 0 0 4-4v-3M7 10h3M7 14h8"/><path d="m18 2 1.2 3.8L23 7l-3.8 1.2L18 12l-1.2-3.8L13 7l3.8-1.2Z"/></svg>';
 const oauthIcon = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="12" r="3"/><path d="M11 12h9m-4 0v3m4-3v2M4 5a10 10 0 0 1 15 0l2 2M21 3v4h-4M20 19a10 10 0 0 1-15 0l-2-2M3 21v-4h4"/></svg>';
 const noteStyles = {
-  llm: { tone: 'lilac', kind: 'Language models', icon: llmIcon, action: 'Read notes' },
+  llm: { tone: 'lilac', kind: 'Language models', icon: llmIcon, action: 'Explore flows' },
   oauth: { tone: 'mint', kind: 'Identity & access', icon: oauthIcon, action: 'Explore flows' },
 };
 

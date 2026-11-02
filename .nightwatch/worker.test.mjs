@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { Script } from 'node:vm';
 import { loadRepository } from './worker.mjs';
+import { LESSONS as llmLessons } from './llm-lessons.mjs';
 
 const commit = 'a'.repeat(40);
 const tree = 'b'.repeat(40);
@@ -107,6 +108,46 @@ test('the animation marker cannot turn arbitrary Markdown or HTML into executabl
   const rendered = result.notes.find(item => item.slug === 'oauth').html;
   assert.match(rendered, /data-oauth-player/);
   assert.doesNotMatch(rendered, /<script>/);
+});
+
+test('the supplied LLM animation stays inside its note and loads its assets only there', async () => {
+  const llm = await readFile(new URL('../notes/llm.md', import.meta.url), 'utf8');
+  const marker = '```llm-animation\n```\n\n<script>alert(1)</script>';
+  const request = await freshWorker({ 'notes/llm.md': llm, 'notes/another.md': marker, 'posts/llm.md': marker, 'notes/oauth.md': note });
+  const response = await request('/note/llm/');
+  const html = await response.text();
+  assert.equal(response.status, 200);
+  assert.match(html, /data-llm-player/);
+  assert.equal((html.match(/data-lesson="/g) || []).length, 16);
+  assert.equal((html.match(/data-lesson-group="/g) || []).length, 3);
+  assert.match(html, /src="\/llm-player.js\?v=/);
+  assert.match(html, /href="\/llm-player.css\?v=/);
+  assert.doesNotMatch(html, /<iframe|Choose a flow|Knowledge check|LLM Playground|oauth-player\.(css|js)/);
+  for (const route of ['/', '/note/', '/note/oauth/', '/note/another/', '/writeups/llm/']) assert.doesNotMatch(await (await request(route)).text(), /data-llm-player|llm-player\.(css|js)|<script>alert/);
+  const script = await request('/llm-player.js');
+  assert.match(script.headers.get('Content-Type'), /application\/javascript/);
+  const source = await script.text();
+  assert.doesNotThrow(() => new Script(source));
+  assert.doesNotMatch(source, /fetch\(|XMLHttpRequest|localStorage/);
+  assert.match((await request('/llm-player.css')).headers.get('Content-Type'), /text\/css/);
+  for (const route of ['/note/llm/', '/llm-player.js', '/llm-player.css']) assert.equal(await (await request(route, 'HEAD')).text(), '');
+});
+
+test('all supplied LLM messages refer to visible actors and defended replays have valid stopping points', () => {
+  const actors = new Set(['browser', 'client', 'auth', 'api', 'source', 'attacker']);
+  assert.equal(new Set(llmLessons.map(lesson => lesson.id)).size, 16);
+  assert.equal(llmLessons.reduce((count, lesson) => count + lesson.steps.length, 0), 91);
+  assert.equal(llmLessons.filter(lesson => lesson.type === 'attack').length, 12);
+  for (const lesson of llmLessons) {
+    for (const step of lesson.steps) {
+      assert.ok(actors.has(step.from) && actors.has(step.to), lesson.id);
+      assert.ok(typeof step.http === 'string' && step.http.length, lesson.id);
+    }
+    if (lesson.type === 'attack') {
+      assert.ok(Number.isInteger(lesson.blockAt) && lesson.blockAt >= 0 && lesson.blockAt < lesson.steps.length - 1, lesson.id);
+      assert.ok(lesson.blocked.title && lesson.blocked.detail && lesson.blocked.http, lesson.id);
+    }
+  }
 });
 
 test('legacy index URLs redirect and removed collections and interactive assets are gone', async () => {

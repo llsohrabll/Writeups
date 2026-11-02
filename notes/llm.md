@@ -1,9 +1,9 @@
 ---
 title: "LLM"
-description: "My notes on large language models."
+description: "Animated LLM workflows, prompt injection, tool security, and AI scanner attacks."
 date: "2026-11-02"
+layout: document
 ---
 
-## Notes
-
-Add your LLM notes here.
+```llm-animation
+```
