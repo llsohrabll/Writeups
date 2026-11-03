@@ -2,6 +2,8 @@
 
 Source for the `nightwatch-writeups` Cloudflare Worker.
 
+All Nightwatch pages use the shared 130% display scale in `display-scale.mjs`. It adjusts responsive breakpoints in the existing theme and component stylesheets to match the enlarged layout, and adds narrow-screen control wrapping. The original theme still comes from the existing `ASSETS` collection. Change `displayVersion` when updating the scale so every stylesheet refreshes together. Printing stays at 100%.
+
 ```
 cd .nightwatch
 pnpm install

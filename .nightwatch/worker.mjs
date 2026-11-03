@@ -5,6 +5,7 @@ import { notebookPage, notebookCss, notebookIcon } from './notebook.mjs';
 import { listingCss } from './listing.mjs';
 import { oauthPlayerCss, oauthPlayerScript } from './oauth-player.mjs';
 import { llmPlayerCss, llmPlayerScript } from './llm-player.mjs';
+import { displayCss, scaleResponsiveCss } from './display-scale.mjs';
 import { page as layoutPage } from './layout.mjs';
 const __name = (value) => value;
 var SOURCE = { owner: "llsohrabll", repo: "Writeups" };
@@ -24,6 +25,7 @@ var HEADERS = {
 var TAG_TONES = /* @__PURE__ */ new Map([["xss", "blue"], ["ssrf", "teal"], ["waf_bypass", "amber"]]);
 var hotSnapshot;
 var refreshPromise;
+var themeCss;
 var encodedPath = /* @__PURE__ */ __name((path) => path.split("/").map(encodeURIComponent).join("/"), "encodedPath");
 var postHref = (post) => post.section
   ? `/note/${encodeURIComponent(post.slug)}/`
@@ -276,20 +278,32 @@ var index_default = {
       const response = htmlResponse(html, status);
       return request.method === 'HEAD' ? new Response(null, { status: response.status, headers: response.headers }) : response;
     };
+    const cssResponse = css => new Response(request.method === 'HEAD' ? null : css, { headers: { ...HEADERS, 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
+    if (url.pathname === '/display.css') return cssResponse(displayCss);
+    if (url.pathname === '/site.css') {
+      if (!themeCss) {
+        const assetUrl = new URL(url);
+        assetUrl.search = '';
+        const asset = await env.ASSETS.fetch(new Request(assetUrl, { headers: { Accept: 'text/css' } }));
+        if (!asset.ok) return request.method === 'HEAD' ? new Response(null, { status: asset.status, headers: asset.headers }) : asset;
+        themeCss = scaleResponsiveCss(await asset.text());
+      }
+      return cssResponse(themeCss);
+    }
     if (url.pathname === '/index.html') return Response.redirect(`${site_config_default.url}/`, 308);
     if (/^\/writeups\/?$/.test(url.pathname)) return Response.redirect(`${site_config_default.url}/#writeups`, 308);
     if (url.pathname === '/parmis' || url.pathname === '/parmis/') return Response.redirect('https://we.nightwatch.team/', 308);
     if (/^\/notes\/?$/.test(url.pathname)) return Response.redirect(`${site_config_default.url}/note/`, 308);
     if (url.pathname.startsWith('/notes/') || ['/notes.css', '/llm-visuals.css', '/llm-visuals.js', '/parmis.css', '/parmis.js'].includes(url.pathname)) return respond(notFound(), 410);
-    if (url.pathname === '/notebook.css') return new Response(request.method === 'HEAD' ? null : notebookCss, { headers: { ...HEADERS, 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
-    if (url.pathname === '/listing.css') return new Response(request.method === 'HEAD' ? null : listingCss, { headers: { ...HEADERS, 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
+    if (url.pathname === '/notebook.css') return cssResponse(scaleResponsiveCss(notebookCss));
+    if (url.pathname === '/listing.css') return cssResponse(scaleResponsiveCss(listingCss));
     if (url.pathname === '/oauth-player.css' || url.pathname === '/oauth-player.js') {
       const script = url.pathname.endsWith('.js');
-      return new Response(request.method === 'HEAD' ? null : script ? oauthPlayerScript : oauthPlayerCss, { headers: { ...HEADERS, 'Content-Type': script ? 'application/javascript; charset=utf-8' : 'text/css; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
+      return new Response(request.method === 'HEAD' ? null : script ? oauthPlayerScript : scaleResponsiveCss(oauthPlayerCss), { headers: { ...HEADERS, 'Content-Type': script ? 'application/javascript; charset=utf-8' : 'text/css; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
     }
     if (url.pathname === '/llm-player.css' || url.pathname === '/llm-player.js') {
       const script = url.pathname.endsWith('.js');
-      return new Response(request.method === 'HEAD' ? null : script ? llmPlayerScript : llmPlayerCss, { headers: { ...HEADERS, 'Content-Type': script ? 'application/javascript; charset=utf-8' : 'text/css; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
+      return new Response(request.method === 'HEAD' ? null : script ? llmPlayerScript : scaleResponsiveCss(llmPlayerCss), { headers: { ...HEADERS, 'Content-Type': script ? 'application/javascript; charset=utf-8' : 'text/css; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
     }
     const noteIndex = /^\/note\/?$/.test(url.pathname);
     const noteMatch = url.pathname.match(/^\/note\/([^/]+)\/?$/);

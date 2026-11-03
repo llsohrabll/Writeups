@@ -108,7 +108,8 @@ export function initOAuthPlayer(LESSONS) {
     if (layout === 'sequence') {
       const stage = root.querySelector('.oauth-stage'), row = $('sequence').querySelector('.is-active');
       const rowRect = row.getBoundingClientRect(), stageRect = stage.getBoundingClientRect();
-      if (rowRect.top < stageRect.top + 50 || rowRect.bottom > stageRect.bottom) stage.scrollTop += rowRect.top - stageRect.top - 55;
+      const zoom = stageRect.width / stage.offsetWidth || 1;
+      if (rowRect.top < stageRect.top + 50 * zoom || rowRect.bottom > stageRect.bottom) stage.scrollTop += (rowRect.top - stageRect.top) / zoom - 55;
     }
   }
   function renderStep(animate = true) {

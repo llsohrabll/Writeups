@@ -202,6 +202,33 @@ test('HEAD, asset fallback, empty homepage, unknown articles and method handling
   assert.match(await (await request('/')).text(), /No writeups yet/);
 });
 
+test('every rendered page gets the shared display scale', async () => {
+  const request = await freshWorker({ 'posts/existing.md': writeup, 'notes/lesson.md': note });
+  for (const path of ['/', '/note/', '/note/lesson/', '/writeups/existing/', '/writeups/missing/']) {
+    const html = await (await request(path)).text();
+    assert.match(html, /href="\/display.css\?v=130-/);
+    assert.match(html, /href="\/site.css\?display=130-/);
+  }
+  assert.match(await (await request('/display.css')).text(), /html\{zoom:1.3\}/);
+  assert.equal(await (await request('/display.css', 'HEAD')).text(), '');
+});
+
+test('the theme asset is preserved while responsive breakpoints account for magnification', async () => {
+  const { default: worker } = await import(`./worker.mjs?test=${crypto.randomUUID()}`);
+  let reads = 0;
+  const source = ':root{--ink:#123456}body{font-size:16px}@media(max-width:600px){.nav{gap:4px}}@media(prefers-reduced-motion:reduce){*{transition:none}}';
+  const env = { ASSETS: { fetch: async request => { reads++; assert.equal(request.method, 'GET'); assert.equal(new URL(request.url).search, ''); return new Response(source, { headers: { ETag: 'original', 'Content-Type': 'text/css', 'Content-Length': String(source.length) } }); } } };
+  const response = await worker.fetch(new Request('https://nightwatch.team/site.css?display=130-v1'), env);
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get('Content-Type'), /text\/css/);
+  assert.equal(await response.text(), source.replace('max-width:600px', 'max-width:780px'));
+  assert.equal(response.headers.get('ETag'), null);
+  assert.equal(response.headers.get('Content-Length'), null);
+  const head = await worker.fetch(new Request('https://nightwatch.team/site.css', { method: 'HEAD' }), env);
+  assert.equal(await head.text(), '');
+  assert.equal(reads, 1);
+});
+
 test('cold requests serve the bundled content while the repository refreshes in the background', async () => {
   const files = { 'posts/existing.md': writeup };
   const initial = await loadRepository(fixture(files));

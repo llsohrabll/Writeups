@@ -4,6 +4,7 @@ import { notebookCss } from './notebook.mjs';
 import { listingCss } from './listing.mjs';
 import { oauthPlayerVersion } from './oauth-player.mjs';
 import { llmPlayerVersion } from './llm-player.mjs';
+import { displayVersion } from './display-scale.mjs';
 
 const notebookVersion = [...notebookCss].reduce((hash, c) => (Math.imul(31, hash) + c.charCodeAt(0)) | 0, 0).toString(36);
 const listingVersion = [...listingCss].reduce((hash, c) => (Math.imul(31, hash) + c.charCodeAt(0)) | 0, 0).toString(36);
@@ -27,9 +28,10 @@ export function page(title, description, route, body, author = site.author, show
 ${route === '/' ? '<script type="module" src="/search.js"></script>' : ''}
 ${oauthAnimation ? `<script defer src="/oauth-player.js?v=${oauthPlayerVersion.js}"></script>` : ''}
 ${llmAnimation ? `<script defer src="/llm-player.js?v=${llmPlayerVersion.js}"></script>` : ''}
-<link rel="stylesheet" href="/site.css">${listing ? `<link rel="stylesheet" href="/listing.css?v=${listingVersion}">` : ''}${notes ? `<link rel="stylesheet" href="/notebook.css?v=${notebookVersion}">` : ''}
-${oauthAnimation ? `<link rel="stylesheet" href="/oauth-player.css?v=${oauthPlayerVersion.css}">` : ''}
-${llmAnimation ? `<link rel="stylesheet" href="/llm-player.css?v=${llmPlayerVersion.css}">` : ''}
+<link rel="stylesheet" href="/site.css?display=${displayVersion}">${listing ? `<link rel="stylesheet" href="/listing.css?v=${listingVersion}&amp;display=${displayVersion}">` : ''}${notes ? `<link rel="stylesheet" href="/notebook.css?v=${notebookVersion}&amp;display=${displayVersion}">` : ''}
+${oauthAnimation ? `<link rel="stylesheet" href="/oauth-player.css?v=${oauthPlayerVersion.css}&amp;display=${displayVersion}">` : ''}
+${llmAnimation ? `<link rel="stylesheet" href="/llm-player.css?v=${llmPlayerVersion.css}&amp;display=${displayVersion}">` : ''}
+<link rel="stylesheet" href="/display.css?v=${displayVersion}">
 
 </head><body id="top"><a class="skip" href="#main">Skip to content</a>
 <header class="site-header"><div class="wrap header-inner"><a class="brand" href="/" aria-label="Nightwatch home"><img class="brand-mark" src="/favicon.svg" alt="" width="32" height="32">Nightwatch</a>
